@@ -436,19 +436,18 @@ fun BookingDetailsSheet(
                 )
             }
 
+                val isFormValid = players.isNotEmpty() &&
+                    players.all { it.name.isNotBlank() && it.blockNo.isNotBlank() && it.flatNo.isNotBlank() } &&
+                    guests.all { it.name.isNotBlank() }
+
                 LTTButton(
                     text = "Submit for Verification",
                     onClick = { 
-                        // basic validation
-                        if (players.any { it.name.isBlank() || it.flatNo.isBlank() } || guests.any { it.name.isBlank() }) {
-                            // handled roughly - in prod we'd show a snackbar inside the dialog
-                        } else {
-                            onConfirm(players, guests, totalAmount)
-                            onDismiss() // Dismiss after confirming to avoid NPE on selectedSlotToBook
-                        }
+                        onConfirm(players, guests, totalAmount)
+                        onDismiss()
                     },
                     isLoading = isBooking,
-                    enabled = policyAgreed,
+                    enabled = policyAgreed && isFormValid,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(24.dp))
