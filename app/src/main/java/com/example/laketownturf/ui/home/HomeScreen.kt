@@ -110,6 +110,7 @@ fun HomeScreen(
     val context = LocalContext.current
     LaunchedEffect(uiState.pendingPaymentOrder) {
         uiState.pendingPaymentOrder?.let { order ->
+            selectedSlotToBook = null // Dismiss the booking dialog when payment launches
             PaymentManager.startPayment(
                 activity = context as Activity,
                 orderId = order.orderId,
@@ -444,7 +445,6 @@ fun BookingDetailsSheet(
                     text = "Submit for Verification",
                     onClick = { 
                         onConfirm(players, guests, totalAmount)
-                        onDismiss()
                     },
                     isLoading = isBooking,
                     enabled = policyAgreed && isFormValid,

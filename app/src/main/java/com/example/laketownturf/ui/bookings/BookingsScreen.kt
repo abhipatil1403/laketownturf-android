@@ -193,20 +193,33 @@ fun BookingCard(
     var showCancelDialog by remember { mutableStateOf(false) }
 
     if (showCancelDialog) {
+        LaunchedEffect(isCancelling) {
+            if (!isCancelling) {
+                showCancelDialog = false
+            }
+        }
+        
         AlertDialog(
-            onDismissRequest = { showCancelDialog = false },
+            onDismissRequest = { if (!isCancelling) showCancelDialog = false },
             title = { Text("Cancel Booking?") },
             text = { Text("Are you sure you want to cancel this booking? A refund will be processed immediately to your original payment method. This cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = {
-                    showCancelDialog = false
-                    onCancel(booking)
-                }) {
-                    Text("Yes, Cancel", color = DangerRed)
+                TextButton(
+                    onClick = { onCancel(booking) },
+                    enabled = !isCancelling
+                ) {
+                    if (isCancelling) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = DangerRed)
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text("Yes, Cancel", color = if (isCancelling) DangerRed.copy(alpha = 0.5f) else DangerRed)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCancelDialog = false }) {
+                TextButton(
+                    onClick = { showCancelDialog = false },
+                    enabled = !isCancelling
+                ) {
                     Text("No, Keep it")
                 }
             },
