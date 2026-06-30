@@ -17,7 +17,10 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -61,6 +64,7 @@ enum class BottomNavItem(
 /**
  * App bottom navigation bar with animated icon transitions.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppBottomBar(
     currentRoute: String?,
@@ -69,63 +73,65 @@ fun AppBottomBar(
 ) {
     val cs = MaterialTheme.colorScheme
 
-    NavigationBar(
-        modifier = modifier,
-        containerColor = cs.surface,
-        contentColor = cs.onSurfaceVariant,
-    ) {
-        BottomNavItem.entries.forEach { item ->
-            val isSelected = currentRoute == item.route
+    CompositionLocalProvider(LocalRippleConfiguration provides null) {
+        NavigationBar(
+            modifier = modifier,
+            containerColor = cs.surface,
+            contentColor = cs.onSurfaceVariant,
+        ) {
+            BottomNavItem.entries.forEach { item ->
+                val isSelected = currentRoute == item.route
 
-            val iconScale by animateFloatAsState(
-                targetValue = if (isSelected) 1.15f else 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow,
-                ),
-                label = "icon_scale_${item.name}",
-            )
+                val iconScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.15f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow,
+                    ),
+                    label = "icon_scale_${item.name}",
+                )
 
-            val tintColor by animateColorAsState(
-                targetValue = if (isSelected) cs.primary else cs.onSurfaceVariant.copy(alpha = 0.5f),
-                label = "icon_tint_${item.name}",
-            )
+                val tintColor by animateColorAsState(
+                    targetValue = if (isSelected) cs.primary else cs.onSurfaceVariant.copy(alpha = 0.5f),
+                    label = "icon_tint_${item.name}",
+                )
 
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = { onItemClick(item) },
-                icon = {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = if (isSelected) cs.primary.copy(alpha = 0.15f) else Color.Transparent,
-                                shape = RoundedCornerShape(12.dp)
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onItemClick(item) },
+                    icon = {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = if (isSelected) cs.primary.copy(alpha = 0.15f) else Color.Transparent,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .padding(horizontal = 24.dp, vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                contentDescription = item.label,
+                                modifier = Modifier.scale(iconScale),
+                                tint = tintColor,
                             )
-                            .padding(horizontal = 24.dp, vertical = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                            contentDescription = item.label,
-                            modifier = Modifier.scale(iconScale),
-                            tint = tintColor,
+                        }
+                    },
+                    label = {
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = tintColor,
                         )
-                    }
-                },
-                label = {
-                    Text(
-                        text = item.label,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = tintColor,
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = cs.primary,
-                    unselectedIconColor = cs.onSurfaceVariant.copy(alpha = 0.5f),
-                    selectedTextColor = cs.primary,
-                    unselectedTextColor = cs.onSurfaceVariant.copy(alpha = 0.5f),
-                    indicatorColor = Color.Transparent,
-                ),
-            )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = cs.primary,
+                        unselectedIconColor = cs.onSurfaceVariant.copy(alpha = 0.5f),
+                        selectedTextColor = cs.primary,
+                        unselectedTextColor = cs.onSurfaceVariant.copy(alpha = 0.5f),
+                        indicatorColor = Color.Transparent,
+                    ),
+                )
+            }
         }
     }
 }
