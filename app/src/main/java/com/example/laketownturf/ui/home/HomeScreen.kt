@@ -28,12 +28,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.laketownturf.data.model.Guest
 import com.example.laketownturf.data.model.Player
@@ -243,25 +246,40 @@ fun BookingDetailsSheet(
     
     val totalAmount = slot.price + (guests.size * guestFee)
 
-    ModalBottomSheet(
+    Dialog(
         onDismissRequest = onDismiss,
-        containerColor = cs.surfaceVariant,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = cs.outline) }
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Column(
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(24.dp),
+            color = cs.surfaceVariant
         ) {
-            Text(
-                text = "Book Slot",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = cs.onSurface
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Book Slot",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = cs.onSurface
+                    )
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Add, contentDescription = "Close", modifier = Modifier.rotate(45f), tint = cs.onSurfaceVariant)
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
             
             // Slot Info Summary
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -418,22 +436,23 @@ fun BookingDetailsSheet(
                 )
             }
 
-            LTTButton(
-                text = "Submit for Verification",
-                onClick = { 
-                    // basic validation
-                    if (players.any { it.name.isBlank() || it.flatNo.isBlank() } || guests.any { it.name.isBlank() }) {
-                        // handled roughly - in prod we'd show a snackbar inside the dialog
-                    } else {
-                        onConfirm(players, guests, totalAmount)
-                        onDismiss() // Dismiss after confirming to avoid NPE on selectedSlotToBook
-                    }
-                },
-                isLoading = isBooking,
-                enabled = policyAgreed,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(48.dp)) // Extra padding for scrolling
+                LTTButton(
+                    text = "Submit for Verification",
+                    onClick = { 
+                        // basic validation
+                        if (players.any { it.name.isBlank() || it.flatNo.isBlank() } || guests.any { it.name.isBlank() }) {
+                            // handled roughly - in prod we'd show a snackbar inside the dialog
+                        } else {
+                            onConfirm(players, guests, totalAmount)
+                            onDismiss() // Dismiss after confirming to avoid NPE on selectedSlotToBook
+                        }
+                    },
+                    isLoading = isBooking,
+                    enabled = policyAgreed,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }
