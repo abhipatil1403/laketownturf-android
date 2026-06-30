@@ -89,7 +89,7 @@ class AuthRepository(
                 Result.failure(Exception("Unexpected credential type"))
             }
         } catch (e: GetCredentialException) {
-            Result.failure(Exception("Failed to get credential: ${e.message}"))
+            Result.failure(e)
         } catch (e: Exception) {
             Result.failure(e)
         }

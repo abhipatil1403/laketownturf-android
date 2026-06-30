@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.laketownturf.data.model.Booking
 import com.example.laketownturf.data.repository.AuthRepository
 import com.example.laketownturf.data.repository.BookingRepository
+import com.example.laketownturf.utils.ErrorMessageHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,7 +48,7 @@ class BookingsViewModel(
                         _uiState.update { it.copy(bookings = bookings, isLoading = false) }
                     },
                     onFailure = { e ->
-                        _uiState.update { it.copy(error = e.message, isLoading = false) }
+                        _uiState.update { it.copy(error = ErrorMessageHelper.getFriendlyMessage(e), isLoading = false) }
                     }
                 )
             }
@@ -67,7 +68,7 @@ class BookingsViewModel(
                     _uiState.update { it.copy(isCancelling = false) }
                 },
                 onFailure = { e ->
-                    _uiState.update { it.copy(isCancelling = false, cancelError = e.message ?: "Failed to cancel booking") }
+                    _uiState.update { it.copy(isCancelling = false, cancelError = ErrorMessageHelper.getFriendlyMessage(e)) }
                 }
             )
         }

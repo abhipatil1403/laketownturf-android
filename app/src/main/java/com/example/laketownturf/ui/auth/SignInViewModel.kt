@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.laketownturf.data.model.UserStatus
 import com.example.laketownturf.data.repository.AuthRepository
 import com.example.laketownturf.data.repository.UserRepository
+import com.example.laketownturf.utils.ErrorMessageHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,7 +60,7 @@ class SignInViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = exception.message ?: "Google Sign-In failed",
+                            error = ErrorMessageHelper.getFriendlyMessage(exception),
                         )
                     }
                 },
@@ -96,7 +97,7 @@ class SignInViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = exception.message ?: "Failed to fetch account",
+                        error = ErrorMessageHelper.getFriendlyMessage(exception)
                     )
                 }
             },

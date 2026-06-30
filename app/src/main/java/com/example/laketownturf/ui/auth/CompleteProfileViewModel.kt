@@ -7,6 +7,7 @@ import com.example.laketownturf.data.model.UserStatus
 import com.example.laketownturf.data.model.UserType
 import com.example.laketownturf.data.repository.AuthRepository
 import com.example.laketownturf.data.repository.UserRepository
+import com.example.laketownturf.utils.ErrorMessageHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -135,9 +136,9 @@ class CompleteProfileViewModel(
                     )
                     _uiState.update { it.copy(isLoading = false, isComplete = true) }
                 },
-                onFailure = { exception ->
-                    _uiState.update {
-                        it.copy(isLoading = false, error = exception.message ?: "Failed to save profile")
+                onFailure = { e ->
+                    _uiState.update { 
+                        it.copy(isLoading = false, error = ErrorMessageHelper.getFriendlyMessage(e)) 
                     }
                 }
             )

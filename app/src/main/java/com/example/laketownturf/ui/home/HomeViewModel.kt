@@ -11,6 +11,7 @@ import com.example.laketownturf.data.repository.BookingRepository
 import com.example.laketownturf.data.repository.SettingsRepository
 import com.example.laketownturf.data.repository.UserRepository
 import com.example.laketownturf.data.api.ApiClient
+import com.example.laketownturf.utils.ErrorMessageHelper
 import com.example.laketownturf.utils.PaymentManager
 import com.example.laketownturf.utils.PaymentResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,7 +86,8 @@ class HomeViewModel(
                         verifyAndBook(orderId, paymentId, signature)
                     }
                     is PaymentResult.Error -> {
-                        _uiState.update { it.copy(isBooking = false, paymentError = "Payment Failed: ${result.description}") }
+                        val friendlyMessage = ErrorMessageHelper.parseRazorpayError(result.description)
+                        _uiState.update { it.copy(isBooking = false, paymentError = "Payment Failed: $friendlyMessage") }
                         pendingBooking = null
                     }
                 }
@@ -139,7 +141,7 @@ class HomeViewModel(
                         _uiState.update { it.copy(slots = slots, isLoading = false) }
                     },
                     onFailure = { e ->
-                        _uiState.update { it.copy(error = e.message, isLoading = false) }
+                        _uiState.update { it.copy(error = ErrorMessageHelper.getFriendlyMessage(e), isLoading = false) }
                     }
                 )
             }
@@ -214,7 +216,7 @@ class HomeViewModel(
                         }
                     },
                     onFailure = { e ->
-                        _uiState.update { it.copy(isBooking = false, paymentError = e.message ?: "Payment successful, but failed to save booking") }
+                        _uiState.update { it.copy(isBooking = false, paymentError = ErrorMessageHelper.getFriendlyMessage(e)) }
                     }
                 )
             } else {
@@ -243,7 +245,7 @@ class HomeViewModel(
             val result = bookingRepository.toggleWaitlist(slot, uid)
             _uiState.update { it.copy(togglingWaitlistForSlotId = null) }
             result.onFailure { e ->
-                _uiState.update { it.copy(error = "Failed to update waitlist: ${e.message}") }
+                _uiState.update { it.copy(error = ErrorMessageHelper.getFriendlyMessage(e)) }
             }
         }
     }
