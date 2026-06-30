@@ -5,4 +5,15 @@
         <item name="android:statusBarColor">#1A1A2E</item>
         <item name="android:navigationBarColor">#0F0F23</item>
     </style>
+
+    <style name="RazorpayTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <!-- Razorpay's UI is white by default, so we match it -->
+        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
 </resources>
