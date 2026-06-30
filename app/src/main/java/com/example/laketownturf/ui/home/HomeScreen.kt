@@ -458,12 +458,12 @@ fun DateSelector(
                 modifier = Modifier
                     .width(64.dp)
                     .height(90.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable { onDateSelected(date) },
                 colors = CardDefaults.cardColors(
                     containerColor = if (isSelected) cs.primary else cs.surfaceVariant.copy(alpha = 0.5f)
                 ),
-                shape = CircleShape,
+                shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 Column(
