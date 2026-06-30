@@ -442,7 +442,7 @@ fun BookingDetailsSheet(
                     guests.all { it.name.isNotBlank() }
 
                 LTTButton(
-                    text = "Submit for Verification",
+                    text = "Continue to Payment",
                     onClick = { 
                         onConfirm(players, guests, totalAmount)
                     },
