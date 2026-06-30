@@ -487,6 +487,8 @@ fun ProfileScreen(
                 onClick = { showLogoutDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             )
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
