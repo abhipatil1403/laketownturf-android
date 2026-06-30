@@ -1,45 +1,92 @@
-# Lake Town Turf 🏟️ (Android App)
+# Lake Town Turf 🏟️
 
-A premium, feature-rich Android application built for residents and guests to seamlessly book and manage turf slots for Lake Town Society.
+A premium, feature-rich platform built for residents and guests to seamlessly book and manage turf slots for Lake Town Society, comprising a mobile application for users and a robust admin dashboard for management.
 
-## 📱 Features
+---
 
-- **Authentication & Roles**: Google Sign-In via Firebase Auth. Accounts are securely gated by an Admin Approval process. Distinguishes between **Society Residents** (Flat No) and **Outsiders/Guests** (Full Address).
-- **Slot Booking & Real-Time Sync**: Browse turf slots dynamically. Uses Firestore Snapshot Listeners to instantly update slot availability (e.g. if another user books a slot, it vanishes from your screen in milliseconds).
-- **Secure Payments**: Integrated **Razorpay SDK** for processing slot fees and guest add-on fees securely. 
-- **Waitlist System**: Full waitlist architecture. If a slot is booked, users can join the waitlist and receive an automated push notification if the slot is cancelled by the original owner.
-- **Push Notifications**: Powered by Firebase Cloud Messaging (FCM) and Netlify backend functions to deliver instant transactional alerts:
-  - Account Approved/Rejected
-  - Booking Confirmed
-  - Slot opened up (Waitlist)
-- **Premium User Interface**: Built entirely with **Jetpack Compose** featuring a sleek, modern aesthetic, custom AMOLED Dark Mode/Light Mode theming, glassmorphism elements, and smooth micro-animations.
-- **Cancellations & Refunds**: Users can cancel their own bookings, automatically triggering a Razorpay refund via the backend and updating the slot to "Available".
+## 📱 Mobile App (Android)
 
-## 🛠️ Tech Stack & Architecture
+The mobile application is designed to provide a seamless, secure, and user-friendly experience for booking turf slots.
 
-- **Language:** Kotlin (100%)
-- **UI Framework:** Jetpack Compose (Material 3)
-- **Architecture:** MVVM (Model-View-ViewModel) + Repository Pattern
-- **Asynchronous Data:** Kotlin Coroutines & Flow (`StateFlow` / `MutableStateFlow`)
-- **Dependency Injection / State Management:** ViewModels injected via Compose Navigation.
-- **Database:** Firebase Firestore (NoSQL, Realtime)
-- **Backend/Webhooks:** Netlify Serverless Functions (`laketownturf-admin`)
-- **Payments:** Razorpay Checkout SDK
-- **Image Loading:** Coil (Compose)
-- **Navigation:** Jetpack Navigation Compose
+### Features & Workflow
 
-## 📁 Key Components
+- **Authentication & Onboarding**: 
+  - One-tap **Google Sign-In**.
+  - **Profile Creation**: Users select their role. 
+    - *Society Members* provide their Mobile Number, Block, and Flat Number.
+    - *Guests/Outsiders* provide their Mobile Number and Full Address.
+  - Users must accept the Terms of Service and Privacy Policy to proceed.
+  
+- **Admin Verification Gate**: 
+  - After profile creation, the account goes into a pending state for Admin verification. 
+  - The admin verifies the provided details (like Flat No. for residents). 
+  - Once approved, the profile becomes active, unlocking the main app.
 
-- `ui/home/`: Contains the `HomeScreen` and `HomeViewModel` for date selection, slot browsing, waitlist joining, and Razorpay checkout triggers.
-- `ui/bookings/`: Contains `BookingsScreen` to view Past/Upcoming bookings, generate PDF receipts, and cancel active bookings.
-- `ui/profile/`: Handles dynamic rendering for Residents vs Guests and houses the Dark Mode toggle.
-- `ui/auth/`: Google Sign-In flows, Pending Approval gate, and new profile creation.
-- `data/repository/`: Abstracted data layer (`AuthRepository`, `BookingRepository`, `UserRepository`) connecting the UI to Firestore.
-- `data/api/`: Network layer containing `ApiClient.kt` for triggering backend push notifications and refunds via Netlify.
+- **Booking Flow (Home Screen)**: 
+  - Users can view day-wise slot availability. Only unbooked slots are open for booking.
+  - During booking, users must enter details for each player (Name, Block, Flat No.).
+  - **Guest Add-ons**: If guests are joining, their names are entered, and a ₹100 fee per guest is automatically added to the turf base price.
+  
+- **Payments (Razorpay)**: 
+  - Integrated with the **Razorpay Payment Gateway** for secure online transactions.
+  - **Success**: The slot is instantly booked, and a digital receipt is generated (eliminating paperwork).
+  - **Failure/Rejection**: No slot is booked, and the user can try again safely.
 
-## 🚀 Getting Started
+- **Dynamic Cancellations & Refunds**: 
+  - Users can cancel their upcoming bookings directly from the app (subject to cancellation policies and countdowns).
+  - Refunds are processed dynamically back to the original payment source.
 
-1. Clone the repository.
-2. Ensure you have the `google-services.json` file placed in the `app/` directory (required for Firebase to initialize).
-3. Build and run via Android Studio (Target SDK 36, Min SDK 26).
-4. For backend features (Refunds, Push Notifications) to work, ensure the corresponding `laketownturf-admin` React project is deployed on Netlify with valid Firebase Admin credentials.
+- **Waitlist & Slot Availability System**: 
+  - If a desired slot is already booked, users can opt-in to be notified.
+  - If the original user or an admin cancels that slot, it immediately becomes free.
+  - An automated push notification is instantly sent to all users who opted into that slot's waitlist, giving them a chance to book it.
+
+- **Bookings Management**: 
+  - **Bookings Tab** categorizes history into Upcoming and Previous bookings.
+  - Features a live countdown for cancellation eligibility.
+  - Users can download digital PDF receipts for their records.
+
+- **Profile & Settings**: 
+  - Edit personal details like Name.
+  - Toggle App Appearance (Dark/Light Mode).
+  - View Maintenance Status (if the admin has paused bookings).
+  - Access Privacy Policy and Terms of Service.
+  - Secure Logout.
+
+### 🔔 Notifications System
+Notifications are crucial for keeping the user informed without them needing to constantly check the app:
+- **Account Approved/Rejected**: Informs the user the moment their profile is reviewed by the admin.
+- **Booking Confirmed**: Transactional assurance that their payment succeeded and the slot is theirs.
+- **Waitlist Alerts**: Vital for maximizing turf utilization. Alerts interested users the second a cancelled slot becomes available again.
+- **System Alerts**: Used for maintenance or manual admin announcements.
+
+---
+
+## 💻 Admin Dashboard (Web)
+
+The admin web portal provides comprehensive control and analytics over the entire turf booking ecosystem.
+
+### Features & Workflow
+
+- **Dashboard**:
+  - High-level metrics at a glance: Today's Revenue, Today's Bookings, Total Users, and Pending Approvals.
+  - **Revenue Chart**: Visual analytics showing daily revenue trends over the last 7 days.
+
+- **Users Management**:
+  - View all registered users (Joined Date, Profile Details, Status).
+  - **Universal Search Bar**: Conveniently search for users by any metric (Name, Email, Flat No, Phone).
+  - Approve or Reject pending profile verifications directly from the list.
+
+- **Slots Management**:
+  - A day-wise calendar view showing all slots and their real-time statuses (Available, Booked, Passed).
+  - Admins can manually block or cancel slots if necessary.
+
+- **Bookings Ledger**:
+  - Comprehensive view of all transactions.
+  - **Filters**: Sort by All, Pending Verification, Upcoming, or Past bookings.
+  - **Deep Search**: Search through bookings using literally anything—Razorpay Order ID, Payment ID, User Name, Flat No, etc.
+  - **CSV Export**: Export the entire bookings ledger into a CSV file for accounting and auditing purposes.
+
+- **Settings & System Controls**:
+  - **Maintenance Mode**: Admins can temporarily pause all slot bookings. 
+  - Can be configured with a custom Start and End time, or toggled manually until turned off. During this time, the mobile app reflects the maintenance status and blocks new checkouts.
