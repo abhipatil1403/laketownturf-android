@@ -193,9 +193,14 @@ fun BookingCard(
     var showCancelDialog by remember { mutableStateOf(false) }
 
     if (showCancelDialog) {
+        var wasCancelling by remember { mutableStateOf(false) }
+        
         LaunchedEffect(isCancelling) {
-            if (!isCancelling) {
+            if (isCancelling) {
+                wasCancelling = true
+            } else if (wasCancelling) {
                 showCancelDialog = false
+                wasCancelling = false
             }
         }
         
