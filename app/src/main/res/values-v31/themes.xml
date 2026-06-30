@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.LakeTownTurf" parent="android:Theme.Material.NoActionBar">
+        <!-- Completely hide the Android 12+ native splash screen icon -->
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <!-- Hide the splash screen background -->
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
+        
+        <item name="android:statusBarColor">#1A1A2E</item>
+        <item name="android:navigationBarColor">#0F0F23</item>
+    </style>
+</resources>

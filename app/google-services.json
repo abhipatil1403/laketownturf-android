@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "661603543438",
+    "project_id": "lake-town-turf",
+    "storage_bucket": "lake-town-turf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:661603543438:android:df4195f9d784bba1eb9cdf",
+        "android_client_info": {
+          "package_name": "com.example.laketownturf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "661603543438-r20tcj8bqpjng5s38arrm03gdtjki0br.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.laketownturf",
+            "certificate_hash": "cc796c43ccdc59567c921e416d720342d48f5479"
+          }
+        },
+        {
+          "client_id": "661603543438-vodk8c6rnsqqn3gdspo35136dkormodm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEFLQqPsG-SFZgfeJcBE9I536bRdAzzkA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "661603543438-vodk8c6rnsqqn3gdspo35136dkormodm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
