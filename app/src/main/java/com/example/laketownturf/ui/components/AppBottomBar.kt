@@ -22,6 +22,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 /**
  * Bottom navigation destinations for the main app.
@@ -89,12 +95,21 @@ fun AppBottomBar(
                 selected = isSelected,
                 onClick = { onItemClick(item) },
                 icon = {
-                    Icon(
-                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.label,
-                        modifier = Modifier.scale(iconScale),
-                        tint = tintColor,
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = if (isSelected) cs.primary.copy(alpha = 0.15f) else Color.Transparent,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = item.label,
+                            modifier = Modifier.scale(iconScale),
+                            tint = tintColor,
+                        )
+                    }
                 },
                 label = {
                     Text(
@@ -108,7 +123,7 @@ fun AppBottomBar(
                     unselectedIconColor = cs.onSurfaceVariant.copy(alpha = 0.5f),
                     selectedTextColor = cs.primary,
                     unselectedTextColor = cs.onSurfaceVariant.copy(alpha = 0.5f),
-                    indicatorColor = cs.primary.copy(alpha = 0.1f),
+                    indicatorColor = Color.Transparent,
                 ),
             )
         }
