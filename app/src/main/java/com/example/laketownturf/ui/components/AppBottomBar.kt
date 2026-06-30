@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.Spacer
 
 /**
  * Bottom navigation destinations for the main app.
@@ -68,6 +69,7 @@ fun AppBottomBar(
         containerColor = cs.surface,
         contentColor = cs.onSurfaceVariant,
     ) {
+        Spacer(modifier = Modifier.weight(0.5f))
         BottomNavItem.entries.forEach { item ->
             val isSelected = currentRoute == item.route
 
@@ -112,5 +114,6 @@ fun AppBottomBar(
                 ),
             )
         }
+        Spacer(modifier = Modifier.weight(0.5f))
     }
 }
