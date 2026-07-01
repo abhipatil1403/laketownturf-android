@@ -184,7 +184,7 @@ fun HomeScreen(
             // AI Recommendation
             if (!uiState.isLoading && uiState.recommendedSlot != null && uiState.recommendationReason != null && !uiState.isMaintenanceActive) {
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, bottom = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp),
                     colors = CardDefaults.cardColors(containerColor = com.example.laketownturf.theme.AmberCTA.copy(alpha = 0.15f)),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                 ) {
