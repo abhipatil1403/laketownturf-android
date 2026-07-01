@@ -41,6 +41,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import android.content.Intent
 import android.net.Uri
@@ -417,25 +418,26 @@ fun ProfileScreen(
             
             // Weather Widget
             if (uiState.weatherInfo != null) {
-                val weather = uiState.weatherInfo
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = if (weather.isGoodForPlay) cs.primaryContainer else cs.errorContainer),
-                    shape = RoundedCornerShape(24.dp),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                uiState.weatherInfo?.let { weather ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = if (weather.isGoodForPlay) cs.primaryContainer else cs.errorContainer),
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(0.dp)
                     ) {
-                        Text(
-                            text = if (weather.isGoodForPlay) "☀️" else "🌧️",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("${weather.temperature}°C, ${weather.description}", fontWeight = FontWeight.Bold, color = if (weather.isGoodForPlay) cs.onPrimaryContainer else cs.onErrorContainer)
-                            Text(if (weather.isGoodForPlay) "Perfect conditions for a match!" else "Heavy weather expected. Consider rescheduling.", style = MaterialTheme.typography.bodySmall, color = if (weather.isGoodForPlay) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onErrorContainer.copy(alpha = 0.8f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (weather.isGoodForPlay) "☀️" else "🌧️",
+                                style = MaterialTheme.typography.headlineMedium
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text("${weather.temperature}°C, ${weather.description}", fontWeight = FontWeight.Bold, color = if (weather.isGoodForPlay) cs.onPrimaryContainer else cs.onErrorContainer)
+                                Text(if (weather.isGoodForPlay) "Perfect conditions for a match!" else "Heavy weather expected. Consider rescheduling.", style = MaterialTheme.typography.bodySmall, color = if (weather.isGoodForPlay) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onErrorContainer.copy(alpha = 0.8f))
+                            }
                         }
                     }
                 }
