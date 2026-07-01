@@ -382,6 +382,8 @@ fun BookingDetailsSheet(
             Spacer(modifier = Modifier.height(8.dp))
             
             players.forEachIndexed { index, player ->
+                var nameDropdownExpanded by remember { mutableStateOf(false) }
+                
                 Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                         Text("Player ${index + 1}", color = cs.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
@@ -409,15 +411,49 @@ fun BookingDetailsSheet(
                             }
                         }
                     }
-                    LTTTextField(
-                        value = player.name,
-                        onValueChange = { newName ->
-                            val updated = players.toMutableList()
-                            updated[index] = player.copy(name = newName)
-                            players = updated
-                        },
-                        label = "Full Name"
-                    )
+                    val matchingPlayers = savedPlayers.filter { 
+                        it.name.contains(player.name, ignoreCase = true) && player.name.isNotBlank() && !it.name.equals(player.name, ignoreCase = true)
+                    }
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        LTTTextField(
+                            value = player.name,
+                            onValueChange = { newName ->
+                                val updated = players.toMutableList()
+                                updated[index] = player.copy(name = newName)
+                                players = updated
+                                nameDropdownExpanded = true
+                            },
+                            label = "Full Name",
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = nameDropdownExpanded && matchingPlayers.isNotEmpty(),
+                            onDismissRequest = { nameDropdownExpanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            matchingPlayers.take(4).forEach { suggestion ->
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { 
+                                        Column {
+                                            Text(suggestion.name, fontWeight = FontWeight.Bold)
+                                            Text("Block ${suggestion.blockNo}, Flat ${suggestion.flatNo}", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                                        }
+                                    },
+                                    onClick = {
+                                        val updated = players.toMutableList()
+                                        updated[index] = player.copy(
+                                            name = suggestion.name,
+                                            blockNo = suggestion.blockNo,
+                                            flatNo = suggestion.flatNo
+                                        )
+                                        players = updated
+                                        nameDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
                         LTTTextField(
