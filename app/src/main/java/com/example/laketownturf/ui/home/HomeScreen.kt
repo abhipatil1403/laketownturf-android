@@ -139,13 +139,23 @@ fun HomeScreen(
     LaunchedEffect(uiState.pendingPaymentOrder) {
         uiState.pendingPaymentOrder?.let { order ->
             selectedSlotToBook = null // Dismiss the booking dialog when payment launches
-            PaymentManager.startPayment(
-                activity = context as Activity,
+            
+            var activityContext = context
+            while (activityContext is android.content.ContextWrapper) {
+                if (activityContext is Activity) break
+                activityContext = activityContext.baseContext
+            }
+            
+            val activity = activityContext as? Activity
+            if (activity != null) {
+                PaymentManager.startPayment(
+                    activity = activity,
                 orderId = order.orderId,
                 amountInPaise = order.amountInPaise,
-                userEmail = order.userEmail,
-                userPhone = order.userPhone
-            )
+                    userEmail = order.userEmail,
+                    userPhone = order.userPhone
+                )
+            }
             viewModel.clearPendingPaymentOrder()
         }
     }

@@ -299,7 +299,8 @@ class HomeViewModel(
                     return@launch
                 }
                 val amountInPaise = (totalAmount * 100).toInt()
-                val orderId = ApiClient.createRazorpayOrder(amountInPaise)
+                val amountForApi = totalAmount.toInt()
+                val orderId = ApiClient.createRazorpayOrder(amountForApi)
                 
                 if (orderId != null) {
                     _uiState.update { it.copy(
