@@ -72,6 +72,7 @@ class HomeViewModel(
 
     private var fetchJob: Job? = null
     private var pendingBooking: PendingBooking? = null
+    private var lastBookingAttemptTime: Long = 0L
 
     init {
         _uiState.update { it.copy(currentUserId = authRepository.currentUser?.uid) }
@@ -106,6 +107,13 @@ class HomeViewModel(
                     is PaymentResult.Error -> {
                         val friendlyMessage = ErrorMessageHelper.parseRazorpayError(result.description)
                         _uiState.update { it.copy(isBooking = false, paymentError = "Payment Failed: $friendlyMessage") }
+                        
+                        // Release lock on failure
+                        val booking = pendingBooking
+                        val uid = authRepository.currentUser?.uid
+                        if (booking != null && uid != null) {
+                            bookingRepository.releaseSlotLock(booking.slot.slotId, uid)
+                        }
                         pendingBooking = null
                     }
                 }
@@ -241,11 +249,25 @@ class HomeViewModel(
             return
         }
 
+        val now = System.currentTimeMillis()
+        if (now - lastBookingAttemptTime < 10000) {
+            _uiState.update { it.copy(error = "Please wait a few seconds before trying again.") }
+            return
+        }
+        lastBookingAttemptTime = now
+
         _uiState.update { it.copy(isBooking = true, error = null, paymentError = null) }
         pendingBooking = PendingBooking(slot, players, guests, totalAmount)
 
         viewModelScope.launch {
             try {
+                // Reserve slot in Firestore before creating Razorpay order
+                val reserveResult = bookingRepository.reserveSlotForPayment(slot.slotId, uid)
+                if (reserveResult.isFailure) {
+                    _uiState.update { it.copy(isBooking = false, error = reserveResult.exceptionOrNull()?.message ?: "Failed to lock slot") }
+                    pendingBooking = null
+                    return@launch
+                }
                 val amountInPaise = (totalAmount * 100).toInt()
                 val orderId = ApiClient.createRazorpayOrder(amountInPaise)
                 
@@ -338,10 +360,12 @@ class HomeViewModel(
                     },
                     onFailure = { e ->
                         _uiState.update { it.copy(isBooking = false, paymentError = ErrorMessageHelper.getFriendlyMessage(e)) }
+                        viewModelScope.launch { bookingRepository.releaseSlotLock(booking.slot.slotId, uid) }
                     }
                 )
             } else {
                 _uiState.update { it.copy(isBooking = false, paymentError = "Payment verification failed") }
+                bookingRepository.releaseSlotLock(booking.slot.slotId, uid)
             }
             pendingBooking = null
         }

@@ -158,6 +158,68 @@ class BookingRepository {
     }
 
     /**
+     * Attempts to acquire a temporary lock on a slot before proceeding to payment.
+     * Prevents double-booking scenarios where multiple users are on the Razorpay screen.
+     */
+    suspend fun reserveSlotForPayment(slotId: String, uid: String): Result<Unit> {
+        return try {
+            val lockRef = db.collection("locks").document(slotId)
+            val uniqueBookingRef = bookingsCollection.document("booking_$slotId")
+
+            db.runTransaction { transaction ->
+                // 1. Check if it's already booked permanently
+                val bookingSnap = transaction.get(uniqueBookingRef)
+                if (bookingSnap.exists() && bookingSnap.getString("status") != com.example.laketownturf.data.model.BookingStatus.CANCELLED) {
+                    throw Exception("This slot was just booked by someone else.")
+                }
+
+                // 2. Check for an active lock
+                val lockSnap = transaction.get(lockRef)
+                val now = System.currentTimeMillis()
+                
+                if (lockSnap.exists()) {
+                    val lockedBy = lockSnap.getString("uid")
+                    val lockedAt = lockSnap.getLong("timestamp") ?: 0L
+                    
+                    // If someone else holds the lock and it's less than 5 minutes old
+                    if (lockedBy != uid && (now - lockedAt) < 5 * 60 * 1000) {
+                        throw Exception("Another user is currently booking this slot. Please try again in 5 minutes.")
+                    }
+                }
+
+                // 3. Acquire lock
+                val lockData = mapOf(
+                    "uid" to uid,
+                    "timestamp" to now
+                )
+                transaction.set(lockRef, lockData)
+            }.await()
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Releases a temporary lock if payment is cancelled or fails.
+     */
+    suspend fun releaseSlotLock(slotId: String, uid: String): Result<Unit> {
+        return try {
+            val lockRef = db.collection("locks").document(slotId)
+            db.runTransaction { transaction ->
+                val lockSnap = transaction.get(lockRef)
+                if (lockSnap.exists() && lockSnap.getString("uid") == uid) {
+                    transaction.delete(lockRef)
+                }
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Attempts to book a slot using a Firestore transaction to prevent double-booking.
      */
     suspend fun bookSlot(uid: String, slot: Slot, players: List<Player>, guests: List<Guest>, totalAmount: Double, razorpayOrderId: String, razorpayPaymentId: String, razorpaySignature: String): Result<Booking> {

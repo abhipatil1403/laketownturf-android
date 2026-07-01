@@ -32,7 +32,11 @@ import com.razorpay.PaymentData
 import com.razorpay.PaymentResultWithDataListener
 import com.example.laketownturf.utils.PaymentManager
 
+import com.google.firebase.analytics.FirebaseAnalytics
+
 class MainActivity : ComponentActivity(), PaymentResultWithDataListener {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted: Boolean ->
@@ -44,6 +48,8 @@ class MainActivity : ComponentActivity(), PaymentResultWithDataListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+
         handleIntent(intent)
 
         askNotificationPermission()
