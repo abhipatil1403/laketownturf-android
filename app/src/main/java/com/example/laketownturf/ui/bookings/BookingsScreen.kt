@@ -374,7 +374,7 @@ fun BookingCard(
                                 type = "text/plain"
                                 val formattedDate = try { java.time.LocalDate.parse(booking.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")) } catch (e: Exception) { booking.date }
                                 val formattedTime = "${com.example.laketownturf.utils.TimeUtils.formatTime12hr(booking.startTime)} - ${com.example.laketownturf.utils.TimeUtils.formatTime12hr(booking.endTime)}"
-                                val message = "Hey! I've booked Lake Town Turf for $formattedDate at $formattedTime. \n\nView details here: laketownturf://booking/${booking.bookingId}"
+                                val message = "Hey! I've booked Lake Town Turf for $formattedDate at $formattedTime. \n\nView details here: https://laketownturf.netlify.app/booking/${booking.bookingId}"
                                 putExtra(android.content.Intent.EXTRA_TEXT, message)
                             }
                             context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Booking"))

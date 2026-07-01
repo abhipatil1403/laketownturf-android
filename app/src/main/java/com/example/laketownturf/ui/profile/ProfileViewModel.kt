@@ -38,7 +38,8 @@ data class ProfileUiState(
     val error: String? = null,
     val isLoggedOut: Boolean = false,
     val photoUrl: String? = null,
-    val stats: UserStats = UserStats()
+    val stats: UserStats = UserStats(),
+    val savedPlayers: List<com.example.laketownturf.data.model.Player> = emptyList()
 )
 
 class ProfileViewModel(
@@ -74,7 +75,8 @@ class ProfileViewModel(
                         user = user,
                         isLoading = false,
                         editName = user?.name ?: "",
-                        photoUrl = photoUrl
+                        photoUrl = photoUrl,
+                        savedPlayers = user?.savedPlayers ?: emptyList()
                     )
                 }
             }

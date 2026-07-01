@@ -81,6 +81,83 @@ fun ProfileScreen(
     val cs = MaterialTheme.colorScheme
     val isDarkMode by ThemePreference.isDarkMode.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showAnalytics by remember { mutableStateOf(false) }
+
+    if (showAnalytics) {
+        val stats = uiState.stats
+        AlertDialog(
+            onDismissRequest = { showAnalytics = false },
+            title = { Text("Playing Analytics", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    if (stats.monthMatches > 0) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
+                            shape = RoundedCornerShape(24.dp),
+                            elevation = CardDefaults.cardElevation(0.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("This Month", fontWeight = FontWeight.Bold, color = cs.onSurface)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Matches: ${stats.monthMatches}", color = cs.onSurfaceVariant)
+                                    Text("Spent: ₹${stats.monthSpent.toInt()}", color = cs.primary, fontWeight = FontWeight.SemiBold)
+                                }
+                                Text("Top Day: ${stats.monthFavDay}", color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    Text("Statistics", fontWeight = FontWeight.Bold, color = cs.onBackground)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatCard("Matches", stats.totalMatches.toString(), Modifier.weight(1f))
+                        StatCard("Hours", stats.totalHours.toString(), Modifier.weight(1f))
+                        StatCard("Guests", stats.guestsInvited.toString(), Modifier.weight(1f))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatCard("Top Day", stats.favDay, Modifier.weight(1f))
+                        StatCard("Top Time", stats.favTime, Modifier.weight(1f))
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text("Achievements", fontWeight = FontWeight.Bold, color = cs.onBackground)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.foundation.lazy.LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val allBadges = listOf(
+                            "First Booking" to "1",
+                            "Regular Player" to "50",
+                            "100 Match Club" to "100",
+                            "Weekend Warrior" to "W",
+                            "Early Bird" to "E",
+                            "Night Owl" to "N",
+                            "Team Captain" to "C"
+                        )
+                        items(allBadges.size) { index ->
+                            val badge = allBadges[index]
+                            val unlocked = stats.unlockedBadges.contains(badge.first)
+                            BadgeCard(badge.first, badge.second, unlocked)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAnalytics = false }) {
+                    Text("Close")
+                }
+            },
+            containerColor = cs.surface,
+            titleContentColor = cs.onSurface,
+            textContentColor = cs.onSurfaceVariant
+        )
+    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -326,63 +403,49 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             
-            // Monthly Summary
-            if (stats.monthMatches > 0) {
-                Card(
+            // Move to Analytics Section
+            LTTButton(
+                text = "View My Analytics",
+                onClick = { showAnalytics = true },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Favorites Section
+            if (uiState.savedPlayers.isNotEmpty()) {
+                Text("Favorite Players", fontWeight = FontWeight.Bold, color = cs.onBackground)
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.foundation.lazy.LazyRow(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(24.dp),
-                    elevation = CardDefaults.cardElevation(0.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("This Month", fontWeight = FontWeight.Bold, color = cs.onSurface)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Matches: ${stats.monthMatches}", color = cs.onSurfaceVariant)
-                            Text("Spent: ₹${stats.monthSpent.toInt()}", color = cs.primary, fontWeight = FontWeight.SemiBold)
+                    items(uiState.savedPlayers.size) { index ->
+                        val player = uiState.savedPlayers[index]
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(0.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(cs.primary.copy(alpha = 0.1f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = player.name.take(2).uppercase(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = cs.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(player.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            }
                         }
-                        Text("Top Day: ${stats.monthFavDay}", color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Stats Grid
-            Text("Playing Statistics", fontWeight = FontWeight.Bold, color = cs.onBackground)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatCard("Matches", stats.totalMatches.toString(), Modifier.weight(1f))
-                StatCard("Hours", stats.totalHours.toString(), Modifier.weight(1f))
-                StatCard("Guests", stats.guestsInvited.toString(), Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatCard("Top Day", stats.favDay, Modifier.weight(1f))
-                StatCard("Top Time", stats.favTime, Modifier.weight(1f))
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Badges
-            Text("Achievements", fontWeight = FontWeight.Bold, color = cs.onBackground)
-            Spacer(modifier = Modifier.height(8.dp))
-            androidx.compose.foundation.lazy.LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                val allBadges = listOf(
-                    "First Booking" to "1",
-                    "Regular Player" to "50",
-                    "100 Match Club" to "100",
-                    "Weekend Warrior" to "W",
-                    "Early Bird" to "E",
-                    "Night Owl" to "N",
-                    "Team Captain" to "C"
-                )
-                items(allBadges.size) { index ->
-                    val badge = allBadges[index]
-                    val unlocked = stats.unlockedBadges.contains(badge.first)
-                    BadgeCard(badge.first, badge.second, unlocked)
                 }
             }
             

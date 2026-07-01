@@ -239,7 +239,9 @@ fun AppNavigation() {
             ),
             deepLinks = listOf(
                 navDeepLink { uriPattern = "laketownturf://home?date={date}&slotId={slotId}" },
-                navDeepLink { uriPattern = "laketownturf://invite?date={date}&slotId={slotId}" }
+                navDeepLink { uriPattern = "laketownturf://invite?date={date}&slotId={slotId}" },
+                navDeepLink { uriPattern = "https://laketownturf.netlify.app/home?date={date}&slotId={slotId}" },
+                navDeepLink { uriPattern = "https://laketownturf.netlify.app/invite?date={date}&slotId={slotId}" }
             )
         ) { backStackEntry ->
             val date = backStackEntry.arguments?.getString("date")
@@ -254,7 +256,9 @@ fun AppNavigation() {
             ),
             deepLinks = listOf(
                 navDeepLink { uriPattern = "laketownturf://bookings?bookingId={bookingId}" },
-                navDeepLink { uriPattern = "laketownturf://booking/{bookingId}" }
+                navDeepLink { uriPattern = "laketownturf://booking/{bookingId}" },
+                navDeepLink { uriPattern = "https://laketownturf.netlify.app/bookings?bookingId={bookingId}" },
+                navDeepLink { uriPattern = "https://laketownturf.netlify.app/booking/{bookingId}" }
             )
         ) { backStackEntry ->
             val bookingId = backStackEntry.arguments?.getString("bookingId")
@@ -263,7 +267,10 @@ fun AppNavigation() {
 
         composable(
             Routes.PROFILE,
-            deepLinks = listOf(navDeepLink { uriPattern = "laketownturf://profile" })
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "laketownturf://profile" },
+                navDeepLink { uriPattern = "https://laketownturf.netlify.app/profile" }
+            )
         ) {
             MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.PROFILE)
         }
