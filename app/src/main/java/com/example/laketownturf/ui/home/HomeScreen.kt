@@ -66,10 +66,12 @@ fun HomeScreen(
     val cs = MaterialTheme.colorScheme
     
     val snackbarHostState = remember { SnackbarHostState() }
+    var deepLinkHandled by androidx.compose.runtime.saveable.rememberSaveable(deepLinkDate, deepLinkSlotId) { mutableStateOf(false) }
     
     LaunchedEffect(deepLinkDate, deepLinkSlotId) {
-        if (deepLinkDate != null || deepLinkSlotId != null) {
+        if (!deepLinkHandled && (deepLinkDate != null || deepLinkSlotId != null)) {
             viewModel.handleDeepLink(deepLinkDate, deepLinkSlotId)
+            deepLinkHandled = true
         }
     }
     
