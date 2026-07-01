@@ -312,11 +312,11 @@ class HomeViewModel(
                         )
                     ) }
                 } else {
-                    _uiState.update { it.copy(isBooking = false, error = "Failed to initialize payment") }
+                    _uiState.update { it.copy(isBooking = false, paymentError = "Failed to initialize payment on the server. Make sure your Netlify environment variables are fully deployed.") }
                     pendingBooking = null
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isBooking = false, error = "Failed to initiate payment: ${e.message}") }
+                _uiState.update { it.copy(isBooking = false, paymentError = "Failed to initiate payment: ${e.message}") }
                 pendingBooking = null
             }
         }
