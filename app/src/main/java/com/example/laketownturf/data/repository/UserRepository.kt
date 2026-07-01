@@ -120,4 +120,17 @@ class UserRepository(
             Result.failure(e)
         }
     }
+
+    /**
+     * Fetches all active users for autocomplete suggestions.
+     */
+    suspend fun getAllActiveUsers(): Result<List<User>> {
+        return try {
+            val snapshot = usersCollection.whereEqualTo("status", com.example.laketownturf.data.model.UserStatus.ACTIVE).get().await()
+            val users = snapshot.toObjects(User::class.java)
+            Result.success(users)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

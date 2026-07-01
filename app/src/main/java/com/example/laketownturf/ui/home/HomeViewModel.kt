@@ -51,6 +51,7 @@ data class HomeUiState(
     val currentUserId: String? = null,
     val togglingWaitlistForSlotId: String? = null,
     val savedPlayers: List<Player> = emptyList(),
+    val allActiveUsers: List<Player> = emptyList(),
     val recommendedSlot: Slot? = null,
     val recommendationReason: String? = null,
     val deepLinkedSlot: Slot? = null
@@ -92,6 +93,15 @@ class HomeViewModel(
         fetchSlotsForDate(_uiState.value.selectedDate)
         observeSettings()
         listenToPaymentResults()
+        
+        viewModelScope.launch {
+            val result = userRepository.getAllActiveUsers()
+            val users = result.getOrNull() ?: emptyList()
+            val players = users.map { user -> 
+                Player(name = user.name, blockNo = user.address.substringBefore(" -").takeIf { it.isNotBlank() } ?: user.address, flatNo = user.flatNo) 
+            }
+            _uiState.update { it.copy(allActiveUsers = players) }
+        }
     }
 
     private fun listenToPaymentResults() {
@@ -205,6 +215,13 @@ class HomeViewModel(
     private fun calculateRecommendation(slots: List<Slot>) {
         val validBookings = validBookingsCache
         if (validBookings.isEmpty()) {
+            _uiState.update { it.copy(recommendedSlot = null, recommendationReason = null) }
+            return
+        }
+        
+        // Hide recommendation if the user already has a booking on this date
+        val selectedDateStr = _uiState.value.selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+        if (validBookings.any { it.date == selectedDateStr }) {
             _uiState.update { it.copy(recommendedSlot = null, recommendationReason = null) }
             return
         }

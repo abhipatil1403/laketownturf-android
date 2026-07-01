@@ -291,6 +291,7 @@ fun HomeScreen(
             slot = selectedSlotToBook!!,
             isBooking = uiState.isBooking,
             savedPlayers = uiState.savedPlayers,
+            allActiveUsers = uiState.allActiveUsers,
             onSavePlayer = viewModel::savePlayer,
             onRemoveSavedPlayer = viewModel::removeSavedPlayer,
             onDismiss = { selectedSlotToBook = null },
@@ -307,6 +308,7 @@ fun BookingDetailsSheet(
     slot: Slot,
     isBooking: Boolean,
     savedPlayers: List<Player>,
+    allActiveUsers: List<Player>,
     onSavePlayer: (Player) -> Unit,
     onRemoveSavedPlayer: (Player) -> Unit,
     onDismiss: () -> Unit,
@@ -421,7 +423,9 @@ fun BookingDetailsSheet(
                             }
                         }
                     }
-                    val matchingPlayers = savedPlayers.filter { 
+                    
+                    val allSuggestions = (savedPlayers + allActiveUsers).distinctBy { "${it.name.lowercase()}_${it.blockNo}_${it.flatNo}" }
+                    val matchingPlayers = allSuggestions.filter { 
                         it.name.contains(player.name, ignoreCase = true) && player.name.isNotBlank() && !it.name.equals(player.name, ignoreCase = true)
                     }
 
