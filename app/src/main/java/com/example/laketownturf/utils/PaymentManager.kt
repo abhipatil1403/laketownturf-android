@@ -18,7 +18,7 @@ object PaymentManager {
 
     fun startPayment(activity: Activity, orderId: String, amountInPaise: Int, userEmail: String, userPhone: String) {
         val checkout = Checkout()
-        checkout.setKeyID("rzp_test_T7XHXIGXW99Nl0") // Ideally this should be secure or fetched from backend, but Razorpay key_id is public.
+        checkout.setKeyID("rzp_test_T8LwIc2bfYCGnG") // MUST match the backend RAZORPAY_KEY_ID
         
         try {
             val options = JSONObject()
