@@ -416,67 +416,6 @@ fun ProfileScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Weather Widget
-            if (uiState.weatherInfo != null) {
-                uiState.weatherInfo?.let { weather ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = if (weather.isGoodForPlay) cs.primaryContainer else cs.errorContainer),
-                        shape = RoundedCornerShape(24.dp),
-                        elevation = CardDefaults.cardElevation(0.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if (weather.isGoodForPlay) "☀️" else "🌧️",
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text("${weather.temperature}°C, ${weather.description}", fontWeight = FontWeight.Bold, color = if (weather.isGoodForPlay) cs.onPrimaryContainer else cs.onErrorContainer)
-                                Text(if (weather.isGoodForPlay) "Perfect conditions for a match!" else "Heavy weather expected. Consider rescheduling.", style = MaterialTheme.typography.bodySmall, color = if (weather.isGoodForPlay) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onErrorContainer.copy(alpha = 0.8f))
-                            }
-                        }
-                    }
-                }
-            } else if (uiState.weatherError) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(24.dp),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Outlined.ErrorOutline, contentDescription = null, tint = cs.onSurfaceVariant)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text("Weather unavailable right now.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                    }
-                }
-            } else {
-                // Weather Loading State
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(24.dp),
-                    elevation = CardDefaults.cardElevation(0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = cs.primary, strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text("Fetching weather info...", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(32.dp))
-
             // Favorites Section
             Text("Favorite Players", fontWeight = FontWeight.Bold, color = cs.onBackground)
             Spacer(modifier = Modifier.height(8.dp))

@@ -37,18 +37,13 @@ data class ProfileUiState(
     val isSaving: Boolean = false,
     val error: String? = null,
     val isLoggedOut: Boolean = false,
-    val photoUrl: String? = null,
-    val stats: UserStats = UserStats(),
-    val savedPlayers: List<com.example.laketownturf.data.model.Player> = emptyList(),
-    val weatherInfo: com.example.laketownturf.data.repository.WeatherInfo? = null,
-    val weatherError: Boolean = false
+    val savedPlayers: List<com.example.laketownturf.data.model.Player> = emptyList()
 )
 
 class ProfileViewModel(
     private val authRepository: AuthRepository = AuthRepository(),
     private val userRepository: UserRepository = UserRepository(),
-    private val bookingRepository: BookingRepository = BookingRepository(),
-    private val weatherRepository: com.example.laketownturf.data.repository.WeatherRepository = com.example.laketownturf.data.repository.WeatherRepository()
+    private val bookingRepository: BookingRepository = BookingRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -56,18 +51,6 @@ class ProfileViewModel(
 
     init {
         loadUser()
-        fetchWeather()
-    }
-
-    private fun fetchWeather() {
-        viewModelScope.launch {
-            val result = weatherRepository.getCurrentWeather()
-            if (result.isSuccess) {
-                _uiState.update { it.copy(weatherInfo = result.getOrNull(), weatherError = false) }
-            } else {
-                _uiState.update { it.copy(weatherError = true) }
-            }
-        }
     }
 
     private fun loadUser() {

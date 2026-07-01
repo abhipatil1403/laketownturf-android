@@ -10,8 +10,6 @@ import com.example.laketownturf.data.repository.AuthRepository
 import com.example.laketownturf.data.repository.BookingRepository
 import com.example.laketownturf.data.repository.SettingsRepository
 import com.example.laketownturf.data.repository.UserRepository
-import com.example.laketownturf.data.repository.WeatherRepository
-import com.example.laketownturf.data.repository.WeatherInfo
 import com.example.laketownturf.data.api.ApiClient
 import com.example.laketownturf.utils.ErrorMessageHelper
 import com.example.laketownturf.utils.PaymentManager
