@@ -49,7 +49,8 @@ data class HomeUiState(
     val maintenanceMessage: String? = null,
     val pendingPaymentOrder: PaymentOrderInfo? = null,
     val currentUserId: String? = null,
-    val togglingWaitlistForSlotId: String? = null
+    val togglingWaitlistForSlotId: String? = null,
+    val savedPlayers: List<Player> = emptyList()
 )
 
 class HomeViewModel(
@@ -111,6 +112,29 @@ class HomeViewModel(
                     )
                 }
             }
+        }
+        
+        val uid = authRepository.currentUser?.uid
+        if (uid != null) {
+            viewModelScope.launch {
+                userRepository.observeUser(uid).collect { user ->
+                    _uiState.update { it.copy(savedPlayers = user?.savedPlayers ?: emptyList()) }
+                }
+            }
+        }
+    }
+
+    fun savePlayer(player: Player) {
+        val uid = authRepository.currentUser?.uid ?: return
+        viewModelScope.launch {
+            userRepository.addSavedPlayer(uid, player)
+        }
+    }
+
+    fun removeSavedPlayer(player: Player) {
+        val uid = authRepository.currentUser?.uid ?: return
+        viewModelScope.launch {
+            userRepository.removeSavedPlayer(uid, player)
         }
     }
 

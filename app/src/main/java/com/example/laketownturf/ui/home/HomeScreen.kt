@@ -23,6 +23,10 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -230,6 +234,9 @@ fun HomeScreen(
         BookingDetailsSheet(
             slot = selectedSlotToBook!!,
             isBooking = uiState.isBooking,
+            savedPlayers = uiState.savedPlayers,
+            onSavePlayer = viewModel::savePlayer,
+            onRemoveSavedPlayer = viewModel::removeSavedPlayer,
             onDismiss = { selectedSlotToBook = null },
             onConfirm = { players, guests, totalAmount ->
                 viewModel.bookSlot(selectedSlotToBook!!, players, guests, totalAmount)
@@ -243,6 +250,9 @@ fun HomeScreen(
 fun BookingDetailsSheet(
     slot: Slot,
     isBooking: Boolean,
+    savedPlayers: List<Player>,
+    onSavePlayer: (Player) -> Unit,
+    onRemoveSavedPlayer: (Player) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (List<Player>, List<Guest>, Double) -> Unit
 ) {
@@ -251,10 +261,30 @@ fun BookingDetailsSheet(
     var players by remember { mutableStateOf(pendingRebook?.players?.ifEmpty { listOf(Player("", "")) } ?: listOf(Player("", ""))) }
     var guests by remember { mutableStateOf(pendingRebook?.guests ?: listOf<Guest>()) }
     var policyAgreed by remember { mutableStateOf(false) }
+    var showSavedPlayersModal by remember { mutableStateOf(false) }
     val guestFee = 100.0
     val cs = MaterialTheme.colorScheme
     
     val totalAmount = slot.price + (guests.size * guestFee)
+
+    if (showSavedPlayersModal) {
+        SavedPlayersModal(
+            savedPlayers = savedPlayers,
+            onDismiss = { showSavedPlayersModal = false },
+            onPlayerSelected = { selectedPlayer ->
+                showSavedPlayersModal = false
+                val updated = players.toMutableList()
+                val emptyIndex = updated.indexOfFirst { it.name.isBlank() && it.blockNo.isBlank() && it.flatNo.isBlank() }
+                if (emptyIndex != -1) {
+                    updated[emptyIndex] = selectedPlayer
+                } else {
+                    updated.add(selectedPlayer)
+                }
+                players = updated
+            },
+            onRemovePlayer = onRemoveSavedPlayer
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -309,6 +339,20 @@ fun BookingDetailsSheet(
                 Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                         Text("Player ${index + 1}", color = cs.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        
+                        val isSaved = savedPlayers.any { it.name.equals(player.name, ignoreCase = true) && it.blockNo == player.blockNo && it.flatNo == player.flatNo }
+                        if (player.name.isNotBlank() && player.blockNo.isNotBlank() && player.flatNo.isNotBlank()) {
+                            IconButton(onClick = {
+                                if (isSaved) onRemoveSavedPlayer(player) else onSavePlayer(player)
+                            }) {
+                                Icon(
+                                    if (isSaved) Icons.Default.Star else Icons.Default.StarBorder,
+                                    contentDescription = if (isSaved) "Remove from saved" else "Save player",
+                                    tint = if (isSaved) cs.primary else cs.onSurfaceVariant
+                                )
+                            }
+                        }
+
                         if (players.size > 1) {
                             IconButton(onClick = {
                                 val updated = players.toMutableList()
@@ -359,13 +403,23 @@ fun BookingDetailsSheet(
                 }
             }
 
-            TextButton(
-                onClick = { players = players + Player("", "") },
-                colors = ButtonDefaults.textButtonColors(contentColor = cs.primary)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Add Resident Player")
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = { players = players + Player("", "") },
+                    colors = ButtonDefaults.textButtonColors(contentColor = cs.primary)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Resident")
+                }
+                TextButton(
+                    onClick = { showSavedPlayersModal = true },
+                    colors = ButtonDefaults.textButtonColors(contentColor = cs.primary)
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("From Saved")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -659,6 +713,68 @@ fun SlotCard(
                         fontWeight = FontWeight.Bold,
                         color = cs.primary
                     )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SavedPlayersModal(
+    savedPlayers: List<Player>,
+    onDismiss: () -> Unit,
+    onPlayerSelected: (Player) -> Unit,
+    onRemovePlayer: (Player) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredPlayers = savedPlayers.filter {
+        it.name.contains(searchQuery, ignoreCase = true) ||
+        it.blockNo.contains(searchQuery, ignoreCase = true) ||
+        it.flatNo.contains(searchQuery, ignoreCase = true)
+    }
+    
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp).padding(bottom = 32.dp)) {
+            Text("Saved Players", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search by name, block, or flat...") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (savedPlayers.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text("No saved players yet. Click the ⭐ next to a player to save them!", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else if (filteredPlayers.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text("No players found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    items(filteredPlayers) { player ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable { onPlayerSelected(player) }.padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(player.name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                                Text("${player.blockNo} - ${player.flatNo}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            IconButton(onClick = { onRemovePlayer(player) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Remove", tint = DangerRed)
+                            }
+                        }
+                        HorizontalDivider()
+                    }
                 }
             }
         }

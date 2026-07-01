@@ -96,4 +96,28 @@ class UserRepository(
     suspend fun updateFcmToken(uid: String, token: String): Result<Unit> {
         return updateUser(uid, mapOf("fcmToken" to token))
     }
+
+    /**
+     * Adds a player to the user's savedPlayers list.
+     */
+    suspend fun addSavedPlayer(uid: String, player: com.example.laketownturf.data.model.Player): Result<Unit> {
+        return try {
+            usersCollection.document(uid).update("savedPlayers", com.google.firebase.firestore.FieldValue.arrayUnion(player)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Removes a player from the user's savedPlayers list.
+     */
+    suspend fun removeSavedPlayer(uid: String, player: com.example.laketownturf.data.model.Player): Result<Unit> {
+        return try {
+            usersCollection.document(uid).update("savedPlayers", com.google.firebase.firestore.FieldValue.arrayRemove(player)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

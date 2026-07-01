@@ -17,7 +17,8 @@ data class User(
     val role: String = UserRole.USER,
     val fcmToken: String? = null,
     val revocationReason: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val savedPlayers: List<Player> = emptyList()
 )
 
 /** User type constants matching Firestore field values. */
