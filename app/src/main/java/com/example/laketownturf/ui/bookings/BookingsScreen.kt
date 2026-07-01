@@ -40,7 +40,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun BookingsScreen(
     viewModel: BookingsViewModel = viewModel(),
-    onNavigateToReceipt: (Booking) -> Unit
+    onNavigateToReceipt: (Booking) -> Unit = {},
+    onBookAgain: (Booking) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = androidx.compose.runtime.remember { SnackbarHostState() }
@@ -105,7 +106,8 @@ fun BookingsScreen(
                         BookingCard(
                             booking = booking,
                             isCancelling = uiState.isCancelling,
-                            onCancel = { viewModel.cancelBooking(it) }
+                            onCancel = { viewModel.cancelBooking(it) },
+                            onBookAgain = onBookAgain
                         )
                     }
                 }
@@ -118,7 +120,8 @@ fun BookingsScreen(
 fun BookingCard(
     booking: Booking,
     isCancelling: Boolean,
-    onCancel: (Booking) -> Unit
+    onCancel: (Booking) -> Unit,
+    onBookAgain: (Booking) -> Unit = {}
 ) {
     val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
     val parsedDate = try {
@@ -372,6 +375,20 @@ fun BookingCard(
                 ) {
                     Text("Cancel Booking ($timeRemainingString)", fontWeight = FontWeight.Bold)
                 }
+            }
+            
+            // Rebook / Book Again feature
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = { onBookAgain(booking) },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, cs.primary),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.primary)
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Book Again", fontWeight = FontWeight.Bold)
             }
         }
     }

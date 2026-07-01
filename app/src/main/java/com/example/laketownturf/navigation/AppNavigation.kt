@@ -277,7 +277,17 @@ private fun MainScreenWithBottomNav(
             when (currentTab) {
                 BottomNavItem.HOME -> HomeScreen()
                 BottomNavItem.BOOKINGS -> BookingsScreen(
-                    onNavigateToReceipt = { /* unused but kept for interface match if any */ }
+                    onNavigateToReceipt = { /* unused but kept for interface match if any */ },
+                    onBookAgain = { booking ->
+                        com.example.laketownturf.utils.SharedBookingState.pendingRebookData = booking
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
                 BottomNavItem.PROFILE -> ProfileScreen(
                     onLogout = {

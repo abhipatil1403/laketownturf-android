@@ -198,6 +198,7 @@ class HomeViewModel(
                 result.fold(
                     onSuccess = {
                         _uiState.update { it.copy(isBooking = false, bookingSuccess = true) }
+                        com.example.laketownturf.utils.SharedBookingState.pendingRebookData = null
                         fetchSlotsForDate(_uiState.value.selectedDate)
                         
                         // Send success push notification

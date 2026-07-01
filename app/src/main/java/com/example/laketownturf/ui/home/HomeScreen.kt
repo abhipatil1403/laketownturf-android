@@ -68,6 +68,13 @@ fun HomeScreen(
         }
     }
     
+    val pendingRebook = com.example.laketownturf.utils.SharedBookingState.pendingRebookData
+    LaunchedEffect(pendingRebook) {
+        if (pendingRebook != null) {
+            snackbarHostState.showSnackbar("Select an available slot to rebook your match")
+        }
+    }
+    
     // Remove booking success snackbar, we will use a dialog instead.
     
     if (uiState.bookingSuccess) {
@@ -239,8 +246,10 @@ fun BookingDetailsSheet(
     onDismiss: () -> Unit,
     onConfirm: (List<Player>, List<Guest>, Double) -> Unit
 ) {
-    var players by remember { mutableStateOf(listOf(Player("", ""))) }
-    var guests by remember { mutableStateOf(listOf<Guest>()) }
+    val pendingRebook = com.example.laketownturf.utils.SharedBookingState.pendingRebookData
+    
+    var players by remember { mutableStateOf(pendingRebook?.players?.ifEmpty { listOf(Player("", "")) } ?: listOf(Player("", ""))) }
+    var guests by remember { mutableStateOf(pendingRebook?.guests ?: listOf<Guest>()) }
     var policyAgreed by remember { mutableStateOf(false) }
     val guestFee = 100.0
     val cs = MaterialTheme.colorScheme
