@@ -25,6 +25,8 @@ import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -74,6 +76,7 @@ import androidx.compose.ui.draw.clip
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
+    onNavigateToFavorites: () -> Unit = {},
     viewModel: ProfileViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -412,40 +415,112 @@ fun ProfileScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Favorites Section
-            if (uiState.savedPlayers.isNotEmpty()) {
-                Text("Favorite Players", fontWeight = FontWeight.Bold, color = cs.onBackground)
-                Spacer(modifier = Modifier.height(8.dp))
-                androidx.compose.foundation.lazy.LazyRow(
+            // Weather Widget
+            if (uiState.weatherInfo != null) {
+                val weather = uiState.weatherInfo
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    colors = CardDefaults.cardColors(containerColor = if (weather.isGoodForPlay) cs.primaryContainer else cs.errorContainer),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(0.dp)
                 ) {
-                    items(uiState.savedPlayers.size) { index ->
-                        val player = uiState.savedPlayers[index]
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(0.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .background(cs.primary.copy(alpha = 0.1f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = player.name.take(2).uppercase(),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = cs.primary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(player.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (weather.isGoodForPlay) "☀️" else "🌧️",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("${weather.temperature}°C, ${weather.description}", fontWeight = FontWeight.Bold, color = if (weather.isGoodForPlay) cs.onPrimaryContainer else cs.onErrorContainer)
+                            Text(if (weather.isGoodForPlay) "Perfect conditions for a match!" else "Heavy weather expected. Consider rescheduling.", style = MaterialTheme.typography.bodySmall, color = if (weather.isGoodForPlay) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onErrorContainer.copy(alpha = 0.8f))
                         }
                     }
+                }
+            } else if (uiState.weatherError) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Outlined.ErrorOutline, contentDescription = null, tint = cs.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text("Weather unavailable right now.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    }
+                }
+            } else {
+                // Weather Loading State
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = cs.primary, strokeWidth = 2.dp)
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text("Fetching weather info...", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Favorites Section
+            Text("Favorite Players", fontWeight = FontWeight.Bold, color = cs.onBackground)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable { onNavigateToFavorites() },
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(cs.onSurfaceVariant.copy(alpha = 0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Group,
+                            contentDescription = null,
+                            tint = cs.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Manage Favorites",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = cs.onSurface
+                        )
+                        Text(
+                            text = "${uiState.savedPlayers.size} Players Saved",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = cs.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Manage",
+                        tint = cs.onSurfaceVariant
+                    )
                 }
             }
             

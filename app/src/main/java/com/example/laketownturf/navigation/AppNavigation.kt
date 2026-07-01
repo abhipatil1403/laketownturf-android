@@ -47,6 +47,7 @@ object Routes {
     const val BOOKINGS_ROUTE = "main/bookings?bookingId={bookingId}"
     const val BOOKINGS = "main/bookings"
     const val PROFILE = "main/profile"
+    const val FAVORITES = "main/profile/favorites"
 }
 
 /**
@@ -274,6 +275,12 @@ fun AppNavigation() {
         ) {
             MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.PROFILE)
         }
+        
+        composable(Routes.FAVORITES) {
+            com.example.laketownturf.ui.profile.FavoritesScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -331,6 +338,7 @@ private fun MainScreenWithBottomNav(
                             popUpTo(navController.graph.id) { inclusive = false }
                         }
                     },
+                    onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) }
                 )
             }
         }

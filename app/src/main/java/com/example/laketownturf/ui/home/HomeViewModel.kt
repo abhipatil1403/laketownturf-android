@@ -53,7 +53,6 @@ data class HomeUiState(
     val currentUserId: String? = null,
     val togglingWaitlistForSlotId: String? = null,
     val savedPlayers: List<Player> = emptyList(),
-    val weatherInfo: WeatherInfo? = null,
     val recommendedSlot: Slot? = null,
     val recommendationReason: String? = null,
     val deepLinkedSlot: Slot? = null
@@ -79,17 +78,9 @@ class HomeViewModel(
         fetchSlotsForDate(_uiState.value.selectedDate)
         observeSettings()
         listenToPaymentResults()
-        fetchWeather()
     }
 
-    private fun fetchWeather() {
-        viewModelScope.launch {
-            val result = weatherRepository.getCurrentWeather()
-            if (result.isSuccess) {
-                _uiState.update { it.copy(weatherInfo = result.getOrNull()) }
-            }
-        }
-    }
+    
 
     private var currentSettings: com.example.laketownturf.data.repository.AppSettings? = null
 
@@ -180,7 +171,7 @@ class HomeViewModel(
         fetchSlotsForDate(date)
     }
 
-    private    fun fetchSlotsForDate(date: LocalDate) {
+    private fun fetchSlotsForDate(date: LocalDate) {
         val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
         fetchJob?.cancel()
         _uiState.update { it.copy(isLoading = true, selectedDate = date, error = null, recommendedSlot = null, recommendationReason = null) }

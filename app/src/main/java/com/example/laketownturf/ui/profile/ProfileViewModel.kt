@@ -39,13 +39,16 @@ data class ProfileUiState(
     val isLoggedOut: Boolean = false,
     val photoUrl: String? = null,
     val stats: UserStats = UserStats(),
-    val savedPlayers: List<com.example.laketownturf.data.model.Player> = emptyList()
+    val savedPlayers: List<com.example.laketownturf.data.model.Player> = emptyList(),
+    val weatherInfo: com.example.laketownturf.data.repository.WeatherInfo? = null,
+    val weatherError: Boolean = false
 )
 
 class ProfileViewModel(
     private val authRepository: AuthRepository = AuthRepository(),
     private val userRepository: UserRepository = UserRepository(),
-    private val bookingRepository: BookingRepository = BookingRepository()
+    private val bookingRepository: BookingRepository = BookingRepository(),
+    private val weatherRepository: com.example.laketownturf.data.repository.WeatherRepository = com.example.laketownturf.data.repository.WeatherRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -53,6 +56,18 @@ class ProfileViewModel(
 
     init {
         loadUser()
+        fetchWeather()
+    }
+
+    private fun fetchWeather() {
+        viewModelScope.launch {
+            val result = weatherRepository.getCurrentWeather()
+            if (result.isSuccess) {
+                _uiState.update { it.copy(weatherInfo = result.getOrNull(), weatherError = false) }
+            } else {
+                _uiState.update { it.copy(weatherError = true) }
+            }
+        }
     }
 
     private fun loadUser() {
@@ -121,6 +136,15 @@ class ProfileViewModel(
     fun logout() {
         authRepository.signOut()
         _uiState.update { it.copy(isLoggedOut = true) }
+    }
+
+    fun removeSavedPlayer(player: com.example.laketownturf.data.model.Player) {
+        val uid = authRepository.currentUser?.uid ?: return
+        viewModelScope.launch {
+            val updatedPlayers = _uiState.value.savedPlayers.filter { it.name != player.name }
+            _uiState.update { it.copy(savedPlayers = updatedPlayers) }
+            userRepository.removeSavedPlayer(uid, player)
+        }
     }
 
     fun clearError() {
