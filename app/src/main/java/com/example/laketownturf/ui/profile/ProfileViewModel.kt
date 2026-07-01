@@ -37,6 +37,8 @@ data class ProfileUiState(
     val isSaving: Boolean = false,
     val error: String? = null,
     val isLoggedOut: Boolean = false,
+    val photoUrl: String? = null,
+    val stats: com.example.laketownturf.data.model.UserStats = com.example.laketownturf.data.model.UserStats(),
     val savedPlayers: List<com.example.laketownturf.data.model.Player> = emptyList()
 )
 
