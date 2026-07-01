@@ -152,13 +152,61 @@ fun HomeScreen(
                 modifier = Modifier.padding(start = 20.dp, top = 0.dp, bottom = 16.dp)
             )
 
+            // Weather Widget
+            uiState.weatherInfo?.let { weather ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = if (weather.isGoodForPlay) cs.primaryContainer else cs.errorContainer),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (weather.isGoodForPlay) "☀️" else "🌧️",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("${weather.temperature}°C, ${weather.description}", fontWeight = FontWeight.Bold, color = if (weather.isGoodForPlay) cs.onPrimaryContainer else cs.onErrorContainer)
+                            Text(if (weather.isGoodForPlay) "Perfect conditions for a match!" else "Heavy weather expected. Consider rescheduling.", style = MaterialTheme.typography.bodySmall, color = if (weather.isGoodForPlay) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onErrorContainer.copy(alpha = 0.8f))
+                        }
+                    }
+                }
+            }
+
             // Date Picker Row
             DateSelector(
                 selectedDate = uiState.selectedDate,
                 onDateSelected = viewModel::onDateSelected
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // AI Recommendation
+            if (!uiState.isLoading && uiState.recommendedSlot != null && uiState.recommendationReason != null && !uiState.isMaintenanceActive) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = com.example.laketownturf.theme.AmberCTA.copy(alpha = 0.15f)),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Star, contentDescription = "AI Pick", tint = com.example.laketownturf.theme.AmberCTA)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Recommended for you", fontWeight = FontWeight.Bold, color = com.example.laketownturf.theme.AmberCTA)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(uiState.recommendationReason!!, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        SlotCard(
+                            slot = uiState.recommendedSlot!!,
+                            currentUserId = uiState.currentUserId,
+                            isTogglingWaitlist = uiState.togglingWaitlistForSlotId == uiState.recommendedSlot!!.slotId,
+                            onClick = { selectedSlotToBook = uiState.recommendedSlot!! },
+                            onToggleWaitlist = { viewModel.toggleWaitlist(uiState.recommendedSlot!!) }
+                        )
+                    }
+                }
+            }
 
             // Slots List or Maintenance Banner
             if (uiState.isLoading) {

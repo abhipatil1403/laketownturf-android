@@ -10,6 +10,8 @@ import com.example.laketownturf.data.repository.AuthRepository
 import com.example.laketownturf.data.repository.BookingRepository
 import com.example.laketownturf.data.repository.SettingsRepository
 import com.example.laketownturf.data.repository.UserRepository
+import com.example.laketownturf.data.repository.WeatherRepository
+import com.example.laketownturf.data.repository.WeatherInfo
 import com.example.laketownturf.data.api.ApiClient
 import com.example.laketownturf.utils.ErrorMessageHelper
 import com.example.laketownturf.utils.PaymentManager
@@ -50,14 +52,18 @@ data class HomeUiState(
     val pendingPaymentOrder: PaymentOrderInfo? = null,
     val currentUserId: String? = null,
     val togglingWaitlistForSlotId: String? = null,
-    val savedPlayers: List<Player> = emptyList()
+    val savedPlayers: List<Player> = emptyList(),
+    val weatherInfo: WeatherInfo? = null,
+    val recommendedSlot: Slot? = null,
+    val recommendationReason: String? = null
 )
 
 class HomeViewModel(
     private val bookingRepository: BookingRepository = BookingRepository(),
     private val authRepository: AuthRepository = AuthRepository(),
     private val settingsRepository: SettingsRepository = SettingsRepository(),
-    private val userRepository: UserRepository = UserRepository()
+    private val userRepository: UserRepository = UserRepository(),
+    private val weatherRepository: WeatherRepository = WeatherRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -71,6 +77,16 @@ class HomeViewModel(
         fetchSlotsForDate(_uiState.value.selectedDate)
         observeSettings()
         listenToPaymentResults()
+        fetchWeather()
+    }
+
+    private fun fetchWeather() {
+        viewModelScope.launch {
+            val result = weatherRepository.getCurrentWeather()
+            if (result.isSuccess) {
+                _uiState.update { it.copy(weatherInfo = result.getOrNull()) }
+            }
+        }
     }
 
     private var currentSettings: com.example.laketownturf.data.repository.AppSettings? = null
@@ -155,19 +171,60 @@ class HomeViewModel(
         fetchSlotsForDate(date)
     }
 
-    private fun fetchSlotsForDate(date: LocalDate) {
-        fetchJob?.cancel() // Cancel previous listener if any
+    private    fun fetchSlotsForDate(date: LocalDate) {
+        val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+        fetchJob?.cancel()
+        _uiState.update { it.copy(isLoading = true, selectedDate = date, error = null, recommendedSlot = null, recommendationReason = null) }
+
         fetchJob = viewModelScope.launch {
-            val dateStr = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
             bookingRepository.getSlotsForDateFlow(dateStr).collect { result ->
                 result.fold(
                     onSuccess = { slots ->
                         _uiState.update { it.copy(slots = slots, isLoading = false) }
+                        calculateRecommendation(slots)
                     },
                     onFailure = { e ->
                         _uiState.update { it.copy(error = ErrorMessageHelper.getFriendlyMessage(e), isLoading = false) }
                     }
                 )
+            }
+        }
+    }
+
+    private fun calculateRecommendation(slots: List<Slot>) {
+        val uid = authRepository.currentUser?.uid ?: return
+        viewModelScope.launch {
+            bookingRepository.getUserBookingsFlow(uid).collect { result ->
+                val bookings = result.getOrNull() ?: emptyList()
+                val validBookings = bookings.filter { it.status == com.example.laketownturf.data.model.BookingStatus.CONFIRMED || it.status == com.example.laketownturf.data.model.BookingStatus.COMPLETED }
+                if (validBookings.isEmpty()) return@collect
+                
+                val availableSlots = slots.filter { !it.isBooked && !it.isPast() }
+                if (availableSlots.isEmpty()) return@collect
+                
+                // 1. Try to recommend based on favourite time
+                val timeFreq = validBookings.groupingBy { it.startTime }.eachCount()
+                val favTime = timeFreq.maxByOrNull { it.value }?.key
+                
+                if (favTime != null) {
+                    val matchingSlot = availableSlots.find { it.startTime == favTime }
+                    if (matchingSlot != null) {
+                        _uiState.update { it.copy(
+                            recommendedSlot = matchingSlot,
+                            recommendationReason = "You frequently play at ${com.example.laketownturf.utils.TimeUtils.formatTime12hr(favTime)}. This slot is available!"
+                        ) }
+                        return@collect
+                    }
+                }
+                
+                // 2. Otherwise recommend the lowest occupied slot today
+                val recommended = availableSlots.firstOrNull()
+                if (recommended != null) {
+                    _uiState.update { it.copy(
+                        recommendedSlot = recommended,
+                        recommendationReason = "Earliest available slot today."
+                    ) }
+                }
             }
         }
     }
