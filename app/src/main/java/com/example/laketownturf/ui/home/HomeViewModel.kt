@@ -60,8 +60,7 @@ class HomeViewModel(
     private val bookingRepository: BookingRepository = BookingRepository(),
     private val authRepository: AuthRepository = AuthRepository(),
     private val settingsRepository: SettingsRepository = SettingsRepository(),
-    private val userRepository: UserRepository = UserRepository(),
-    private val weatherRepository: WeatherRepository = WeatherRepository()
+    private val userRepository: UserRepository = UserRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
