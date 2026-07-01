@@ -248,6 +248,11 @@ fun AppNavigation() {
         ) { backStackEntry ->
             val date = backStackEntry.arguments?.getString("date")
             val slotId = backStackEntry.arguments?.getString("slotId")
+            
+            // Clear arguments after reading them so clicking 'Home' later doesn't re-trigger deep link state
+            backStackEntry.arguments?.remove("date")
+            backStackEntry.arguments?.remove("slotId")
+
             MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.HOME, deepLinkDate = date, deepLinkSlotId = slotId)
         }
 
@@ -305,13 +310,24 @@ private fun MainScreenWithBottomNav(
             AppBottomBar(
                 currentRoute = currentTab.route,
                 onItemClick = { item ->
-                    navController.navigate(item.route) {
-                        // Pop up to the start destination to avoid building up a large stack
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                    if (currentTab.route == item.route) {
+                        // Reset tab state on re-selection
+                        val routeToPop = when(item) {
+                            BottomNavItem.HOME -> Routes.HOME_ROUTE
+                            BottomNavItem.BOOKINGS -> Routes.BOOKINGS_ROUTE
+                            BottomNavItem.PROFILE -> Routes.PROFILE
                         }
-                        launchSingleTop = true
-                        restoreState = true
+                        navController.popBackStack(routeToPop, inclusive = true, saveState = false)
+                        navController.navigate(item.route)
+                    } else {
+                        navController.navigate(item.route) {
+                            // Pop up to the start destination to avoid building up a large stack
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )

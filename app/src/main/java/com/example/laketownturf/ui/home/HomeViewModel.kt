@@ -344,8 +344,14 @@ class HomeViewModel(
     private fun checkDeepLinkSlot(slots: List<Slot>) {
         if (targetDeepLinkSlotId != null && slots.isNotEmpty()) {
             val slot = slots.find { it.slotId == targetDeepLinkSlotId }
-            if (slot != null && !slot.isBooked && !slot.isPast()) {
-                _uiState.update { it.copy(deepLinkedSlot = slot) }
+            if (slot != null) {
+                if (slot.isPast()) {
+                    _uiState.update { it.copy(error = "This slot is in the past.") }
+                } else if (slot.isBooked) {
+                    _uiState.update { it.copy(error = "This slot has already been booked.") }
+                } else {
+                    _uiState.update { it.copy(deepLinkedSlot = slot) }
+                }
                 targetDeepLinkSlotId = null
             }
         }
