@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
@@ -56,14 +57,28 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    deepLinkDate: String? = null,
+    deepLinkSlotId: String? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedSlotToBook by remember { mutableStateOf<Slot?>(null) }
     val cs = MaterialTheme.colorScheme
     
-    // SnackBar for errors or success
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    LaunchedEffect(deepLinkDate, deepLinkSlotId) {
+        if (deepLinkDate != null || deepLinkSlotId != null) {
+            viewModel.handleDeepLink(deepLinkDate, deepLinkSlotId)
+        }
+    }
+    
+    LaunchedEffect(uiState.deepLinkedSlot) {
+        if (uiState.deepLinkedSlot != null) {
+            selectedSlotToBook = uiState.deepLinkedSlot
+            viewModel.clearDeepLinkedSlot()
+        }
+    }
     
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -750,17 +765,36 @@ fun SlotCard(
                     )
                 }
             } else {
-                Box(
-                    modifier = Modifier
-                        .background(cs.primary.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Book",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = cs.primary
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    androidx.compose.material3.IconButton(
+                        onClick = {
+                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                val formattedDate = try { java.time.LocalDate.parse(slot.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")) } catch (e: Exception) { slot.date }
+                                val formattedTime = "${TimeUtils.formatTime12hr(slot.startTime)} - ${TimeUtils.formatTime12hr(slot.endTime)}"
+                                val message = "Let's play at Lake Town Turf on $formattedDate at $formattedTime! \n\nBook the slot here: laketownturf://invite?date=${slot.date}&slotId=${slot.slotId}"
+                                putExtra(android.content.Intent.EXTRA_TEXT, message)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Invite Friends"))
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Send, contentDescription = "Share", tint = cs.primary, modifier = Modifier.size(20.dp))
+                    }
+                    
+                    Box(
+                        modifier = Modifier
+                            .background(cs.primary.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = "Book",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = cs.primary
+                        )
+                    }
                 }
             }
         }

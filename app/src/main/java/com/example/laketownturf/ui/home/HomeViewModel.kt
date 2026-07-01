@@ -55,7 +55,8 @@ data class HomeUiState(
     val savedPlayers: List<Player> = emptyList(),
     val weatherInfo: WeatherInfo? = null,
     val recommendedSlot: Slot? = null,
-    val recommendationReason: String? = null
+    val recommendationReason: String? = null,
+    val deepLinkedSlot: Slot? = null
 )
 
 class HomeViewModel(
@@ -182,6 +183,7 @@ class HomeViewModel(
                     onSuccess = { slots ->
                         _uiState.update { it.copy(slots = slots, isLoading = false) }
                         calculateRecommendation(slots)
+                        checkDeepLinkSlot(slots)
                     },
                     onFailure = { e ->
                         _uiState.update { it.copy(error = ErrorMessageHelper.getFriendlyMessage(e), isLoading = false) }
@@ -232,35 +234,72 @@ class HomeViewModel(
     fun bookSlot(slot: Slot, players: List<Player>, guests: List<Guest>, totalAmount: Double) {
         val uid = authRepository.currentUser?.uid
         val email = authRepository.currentUser?.email ?: ""
+        val phone = authRepository.currentUser?.phoneNumber ?: ""
+        
         if (uid == null) {
-            _uiState.update { it.copy(error = "User not logged in") }
+            _uiState.update { it.copy(error = "User not logged in.") }
             return
         }
 
-        _uiState.update { it.copy(isBooking = true, error = null) }
+        _uiState.update { it.copy(isBooking = true, error = null, paymentError = null) }
         pendingBooking = PendingBooking(slot, players, guests, totalAmount)
 
         viewModelScope.launch {
-            val amountInInr = totalAmount.toInt()
-            val amountInPaise = amountInInr * 100
-            val orderId = ApiClient.createRazorpayOrder(amountInInr)
-            
-            if (orderId != null) {
-                _uiState.update { 
-                    it.copy(
+            try {
+                val amountInPaise = (totalAmount * 100).toInt()
+                val orderId = ApiClient.createRazorpayOrder(amountInPaise)
+                
+                if (orderId != null) {
+                    _uiState.update { it.copy(
                         pendingPaymentOrder = PaymentOrderInfo(
                             orderId = orderId,
                             amountInPaise = amountInPaise,
                             userEmail = email,
-                            userPhone = "" // Can be fetched from user doc if needed
+                            userPhone = phone
                         )
-                    )
+                    ) }
+                } else {
+                    _uiState.update { it.copy(isBooking = false, error = "Failed to initialize payment") }
+                    pendingBooking = null
                 }
-            } else {
-                _uiState.update { it.copy(isBooking = false, error = "Failed to initialize payment") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isBooking = false, error = "Failed to initiate payment: ${e.message}") }
                 pendingBooking = null
             }
         }
+    }
+
+    private var targetDeepLinkSlotId: String? = null
+
+    fun handleDeepLink(dateStr: String?, slotId: String?) {
+        if (dateStr != null) {
+            try {
+                val targetDate = LocalDate.parse(dateStr)
+                if (targetDate != _uiState.value.selectedDate) {
+                    onDateSelected(targetDate)
+                }
+            } catch (e: Exception) {
+                // Invalid date
+            }
+        }
+        if (slotId != null) {
+            targetDeepLinkSlotId = slotId
+            checkDeepLinkSlot(_uiState.value.slots)
+        }
+    }
+
+    private fun checkDeepLinkSlot(slots: List<Slot>) {
+        if (targetDeepLinkSlotId != null && slots.isNotEmpty()) {
+            val slot = slots.find { it.slotId == targetDeepLinkSlotId }
+            if (slot != null && !slot.isBooked && !slot.isPast()) {
+                _uiState.update { it.copy(deepLinkedSlot = slot) }
+                targetDeepLinkSlotId = null
+            }
+        }
+    }
+    
+    fun clearDeepLinkedSlot() {
+        _uiState.update { it.copy(deepLinkedSlot = null) }
     }
 
     private fun verifyAndBook(orderId: String, paymentId: String, signature: String) {

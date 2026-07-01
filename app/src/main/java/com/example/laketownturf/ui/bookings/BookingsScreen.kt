@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -42,12 +43,31 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun BookingsScreen(
     viewModel: BookingsViewModel = viewModel(),
+    deepLinkBookingId: String? = null,
     onNavigateToReceipt: (Booking) -> Unit = {},
     onBookAgain: (Booking) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = androidx.compose.runtime.remember { SnackbarHostState() }
     val cs = MaterialTheme.colorScheme
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    LaunchedEffect(deepLinkBookingId) {
+        if (deepLinkBookingId != null) {
+            viewModel.handleDeepLink(deepLinkBookingId)
+        }
+    }
+    
+    LaunchedEffect(uiState.deepLinkedBookingId, uiState.bookings) {
+        val deepLinkedId = uiState.deepLinkedBookingId
+        if (deepLinkedId != null && uiState.bookings.isNotEmpty()) {
+            val index = uiState.bookings.indexOfFirst { it.bookingId == deepLinkedId }
+            if (index != -1) {
+                listState.animateScrollToItem(index)
+                viewModel.clearDeepLinkedBooking()
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.fetchUserBookings()
@@ -101,6 +121,7 @@ fun BookingsScreen(
                 EmptyBookingsState()
             } else {
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -346,6 +367,23 @@ fun BookingCard(
                         },
                         modifier = Modifier.weight(1f)
                     )
+                    
+                    FilledIconButton(
+                        onClick = {
+                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                val formattedDate = try { java.time.LocalDate.parse(booking.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")) } catch (e: Exception) { booking.date }
+                                val formattedTime = "${com.example.laketownturf.utils.TimeUtils.formatTime12hr(booking.startTime)} - ${com.example.laketownturf.utils.TimeUtils.formatTime12hr(booking.endTime)}"
+                                val message = "Hey! I've booked Lake Town Turf for $formattedDate at $formattedTime. \n\nView details here: laketownturf://booking/${booking.bookingId}"
+                                putExtra(android.content.Intent.EXTRA_TEXT, message)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Booking"))
+                        },
+                        modifier = Modifier.size(50.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = cs.primaryContainer, contentColor = cs.onPrimaryContainer)
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Send, contentDescription = "Share")
+                    }
                     
                     if (canCancel) {
                         OutlinedButton(

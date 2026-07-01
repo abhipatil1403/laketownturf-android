@@ -17,7 +17,8 @@ data class BookingsUiState(
     val isLoading: Boolean = true,
     val isCancelling: Boolean = false,
     val error: String? = null,
-    val cancelError: String? = null
+    val cancelError: String? = null,
+    val deepLinkedBookingId: String? = null
 )
 
 class BookingsViewModel(
@@ -57,6 +58,16 @@ class BookingsViewModel(
 
     fun clearCancelError() {
         _uiState.update { it.copy(cancelError = null) }
+    }
+    
+    fun handleDeepLink(bookingId: String?) {
+        if (bookingId != null) {
+            _uiState.update { it.copy(deepLinkedBookingId = bookingId) }
+        }
+    }
+    
+    fun clearDeepLinkedBooking() {
+        _uiState.update { it.copy(deepLinkedBookingId = null) }
     }
 
     fun cancelBooking(booking: Booking) {

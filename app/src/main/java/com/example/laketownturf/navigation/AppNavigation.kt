@@ -42,7 +42,9 @@ object Routes {
     const val COMPLETE_PROFILE = "auth/complete_profile"
     const val PENDING = "auth/pending"
     const val MAIN = "main"
+    const val HOME_ROUTE = "main/home?date={date}&slotId={slotId}"
     const val HOME = "main/home"
+    const val BOOKINGS_ROUTE = "main/bookings?bookingId={bookingId}"
     const val BOOKINGS = "main/bookings"
     const val PROFILE = "main/profile"
 }
@@ -229,15 +231,34 @@ fun AppNavigation() {
 
         // ── Main App Screens (with Bottom Nav) ────────────────────
 
-        composable(Routes.HOME) {
-            MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.HOME)
+        composable(
+            route = Routes.HOME_ROUTE,
+            arguments = listOf(
+                androidx.navigation.navArgument("date") { type = androidx.navigation.NavType.StringType; nullable = true; defaultValue = null },
+                androidx.navigation.navArgument("slotId") { type = androidx.navigation.NavType.StringType; nullable = true; defaultValue = null }
+            ),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "laketownturf://home?date={date}&slotId={slotId}" },
+                navDeepLink { uriPattern = "laketownturf://invite?date={date}&slotId={slotId}" }
+            )
+        ) { backStackEntry ->
+            val date = backStackEntry.arguments?.getString("date")
+            val slotId = backStackEntry.arguments?.getString("slotId")
+            MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.HOME, deepLinkDate = date, deepLinkSlotId = slotId)
         }
 
         composable(
-            Routes.BOOKINGS,
-            deepLinks = listOf(navDeepLink { uriPattern = "laketownturf://bookings" })
-        ) {
-            MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.BOOKINGS)
+            route = Routes.BOOKINGS_ROUTE,
+            arguments = listOf(
+                androidx.navigation.navArgument("bookingId") { type = androidx.navigation.NavType.StringType; nullable = true; defaultValue = null }
+            ),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "laketownturf://bookings?bookingId={bookingId}" },
+                navDeepLink { uriPattern = "laketownturf://booking/{bookingId}" }
+            )
+        ) { backStackEntry ->
+            val bookingId = backStackEntry.arguments?.getString("bookingId")
+            MainScreenWithBottomNav(navController = navController, currentTab = BottomNavItem.BOOKINGS, deepLinkBookingId = bookingId)
         }
 
         composable(
@@ -253,6 +274,9 @@ fun AppNavigation() {
 private fun MainScreenWithBottomNav(
     navController: NavHostController,
     currentTab: BottomNavItem,
+    deepLinkDate: String? = null,
+    deepLinkSlotId: String? = null,
+    deepLinkBookingId: String? = null
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -275,9 +299,13 @@ private fun MainScreenWithBottomNav(
         // Consume padding
         androidx.compose.foundation.layout.Box(modifier = Modifier.padding(padding)) {
             when (currentTab) {
-                BottomNavItem.HOME -> HomeScreen()
+                BottomNavItem.HOME -> HomeScreen(
+                    deepLinkDate = deepLinkDate,
+                    deepLinkSlotId = deepLinkSlotId
+                )
                 BottomNavItem.BOOKINGS -> BookingsScreen(
-                    onNavigateToReceipt = { /* unused but kept for interface match if any */ },
+                    deepLinkBookingId = deepLinkBookingId,
+                    onNavigateToReceipt = { /* unused */ },
                     onBookAgain = { booking ->
                         com.example.laketownturf.utils.SharedBookingState.pendingRebookData = booking
                         navController.navigate(Routes.HOME) {
