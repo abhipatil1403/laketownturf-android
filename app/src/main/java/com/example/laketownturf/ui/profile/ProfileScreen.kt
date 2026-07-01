@@ -16,7 +16,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Apartment
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DarkMode
@@ -78,6 +80,7 @@ import androidx.compose.ui.draw.clip
 fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateToFavorites: () -> Unit = {},
+    onNavigateToAnalytics: () -> Unit = {},
     viewModel: ProfileViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -85,83 +88,8 @@ fun ProfileScreen(
     val cs = MaterialTheme.colorScheme
     val isDarkMode by ThemePreference.isDarkMode.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showAnalytics by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
 
-    if (showAnalytics) {
-        val stats = uiState.stats
-        AlertDialog(
-            onDismissRequest = { showAnalytics = false },
-            title = { Text("Playing Analytics", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    if (stats.monthMatches > 0) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
-                            shape = RoundedCornerShape(24.dp),
-                            elevation = CardDefaults.cardElevation(0.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("This Month", fontWeight = FontWeight.Bold, color = cs.onSurface)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("Matches: ${stats.monthMatches}", color = cs.onSurfaceVariant)
-                                    Text("Spent: ₹${stats.monthSpent.toInt()}", color = cs.primary, fontWeight = FontWeight.SemiBold)
-                                }
-                                Text("Top Day: ${stats.monthFavDay}", color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
-                    Text("Statistics", fontWeight = FontWeight.Bold, color = cs.onBackground)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatCard("Matches", stats.totalMatches.toString(), Modifier.weight(1f))
-                        StatCard("Hours", stats.totalHours.toString(), Modifier.weight(1f))
-                        StatCard("Guests", stats.guestsInvited.toString(), Modifier.weight(1f))
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatCard("Top Day", stats.favDay, Modifier.weight(1f))
-                        StatCard("Top Time", stats.favTime, Modifier.weight(1f))
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text("Achievements", fontWeight = FontWeight.Bold, color = cs.onBackground)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    androidx.compose.foundation.lazy.LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val allBadges = listOf(
-                            "First Booking" to "1",
-                            "Regular Player" to "50",
-                            "100 Match Club" to "100",
-                            "Weekend Warrior" to "W",
-                            "Early Bird" to "E",
-                            "Night Owl" to "N",
-                            "Team Captain" to "C"
-                        )
-                        items(allBadges.size) { index ->
-                            val badge = allBadges[index]
-                            val unlocked = stats.unlockedBadges.contains(badge.first)
-                            BadgeCard(badge.first, badge.second, unlocked)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showAnalytics = false }) {
-                    Text("Close")
-                }
-            },
-            containerColor = cs.surface,
-            titleContentColor = cs.onSurface,
-            textContentColor = cs.onSurfaceVariant
-        )
-    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -407,21 +335,63 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             
-            // Move to Analytics Section
-            LTTButton(
-                text = "View My Analytics",
-                onClick = { showAnalytics = true },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Analytics Section
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onNavigateToAnalytics() },
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(cs.onSurfaceVariant.copy(alpha = 0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Analytics,
+                            contentDescription = null,
+                            tint = cs.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "My Analytics",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = cs.onSurface
+                        )
+                        Text(
+                            text = "View your playing stats",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = cs.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "View Analytics",
+                        tint = cs.onSurfaceVariant
+                    )
+                }
+            }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Favorites Section
-            Text("Favorite Players", fontWeight = FontWeight.Bold, color = cs.onBackground)
-            Spacer(modifier = Modifier.height(8.dp))
-            
             Card(
-                modifier = Modifier.fillMaxWidth().clickable { onNavigateToFavorites() },
+                modifier = Modifier.fillMaxWidth().clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onNavigateToFavorites() },
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.5f)),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(0.dp)
@@ -705,37 +675,4 @@ private fun ProfileInfoRow(
     }
 }
 
-@Composable
-fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
-    val cs = MaterialTheme.colorScheme
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.3f)),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = cs.primary)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-        }
-    }
-}
 
-@Composable
-fun BadgeCard(name: String, iconStr: String, unlocked: Boolean) {
-    val cs = MaterialTheme.colorScheme
-    val bgColor = if (unlocked) com.example.laketownturf.theme.AmberCTA.copy(alpha = 0.15f) else cs.onSurfaceVariant.copy(alpha = 0.1f)
-    val contentColor = if (unlocked) com.example.laketownturf.theme.AmberCTA else cs.onSurfaceVariant.copy(alpha = 0.5f)
-    
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(80.dp)) {
-        Box(
-            modifier = Modifier.size(60.dp).background(bgColor, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(if (unlocked) "🏆" else "🔒", style = MaterialTheme.typography.titleLarge)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(name, style = MaterialTheme.typography.labelSmall, color = contentColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-    }
-}

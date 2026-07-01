@@ -48,6 +48,7 @@ object Routes {
     const val BOOKINGS = "main/bookings"
     const val PROFILE = "main/profile"
     const val FAVORITES = "main/profile/favorites"
+    const val ANALYTICS = "main/profile/analytics"
 }
 
 /**
@@ -281,6 +282,12 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+        
+        composable(Routes.ANALYTICS) {
+            com.example.laketownturf.ui.profile.AnalyticsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -338,7 +345,8 @@ private fun MainScreenWithBottomNav(
                             popUpTo(navController.graph.id) { inclusive = false }
                         }
                     },
-                    onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) }
+                    onNavigateToFavorites = { navController.navigate(Routes.FAVORITES) },
+                    onNavigateToAnalytics = { navController.navigate(Routes.ANALYTICS) }
                 )
             }
         }
