@@ -754,7 +754,7 @@ fun SlotCard(
                                 type = "text/plain"
                                 val formattedDate = try { java.time.LocalDate.parse(slot.date).format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")) } catch (e: Exception) { slot.date }
                                 val formattedTime = "${TimeUtils.formatTime12hr(slot.startTime)} - ${TimeUtils.formatTime12hr(slot.endTime)}"
-                                val message = "Let's play at Lake Town Turf on $formattedDate at $formattedTime! \n\nBook the slot here: https://laketownturf.netlify.app/invite?date=${slot.date}&slotId=${slot.slotId}"
+                                val message = "Let's play at Lake Town Turf on $formattedDate at $formattedTime! \n\nBook the slot here: https://lake-town-turf-admin.netlify.app/invite?date=${slot.date}&slotId=${slot.slotId}"
                                 putExtra(android.content.Intent.EXTRA_TEXT, message)
                             }
                             context.startActivity(android.content.Intent.createChooser(shareIntent, "Invite Friends"))
