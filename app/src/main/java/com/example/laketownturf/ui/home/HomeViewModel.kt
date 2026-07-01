@@ -314,10 +314,12 @@ class HomeViewModel(
                 } else {
                     _uiState.update { it.copy(isBooking = false, paymentError = "Failed to initialize payment on the server. Make sure your Netlify environment variables are fully deployed.") }
                     pendingBooking = null
+                    bookingRepository.releaseSlotLock(slot.slotId, uid)
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isBooking = false, paymentError = "Failed to initiate payment: ${e.message}") }
                 pendingBooking = null
+                bookingRepository.releaseSlotLock(slot.slotId, uid)
             }
         }
     }
