@@ -70,16 +70,29 @@ class HomeViewModel(
     private var pendingBooking: PendingBooking? = null
     private var lastBookingAttemptTime: Long = 0L
 
+    private var currentSettings: com.example.laketownturf.data.repository.AppSettings? = null
+    private var validBookingsCache: List<Booking> = emptyList()
+
     init {
-        _uiState.update { it.copy(currentUserId = authRepository.currentUser?.uid) }
+        val uid = authRepository.currentUser?.uid
+        _uiState.update { it.copy(currentUserId = uid) }
+        
+        if (uid != null) {
+            viewModelScope.launch {
+                bookingRepository.getUserBookingsFlow(uid).collect { result ->
+                    val bookings = result.getOrNull() ?: emptyList()
+                    validBookingsCache = bookings.filter { it.status == com.example.laketownturf.data.model.BookingStatus.CONFIRMED || it.status == com.example.laketownturf.data.model.BookingStatus.COMPLETED }
+                    if (_uiState.value.slots.isNotEmpty()) {
+                        calculateRecommendation(_uiState.value.slots)
+                    }
+                }
+            }
+        }
+        
         fetchSlotsForDate(_uiState.value.selectedDate)
         observeSettings()
         listenToPaymentResults()
     }
-
-    
-
-    private var currentSettings: com.example.laketownturf.data.repository.AppSettings? = null
 
     private fun listenToPaymentResults() {
         viewModelScope.launch {
@@ -190,41 +203,70 @@ class HomeViewModel(
     }
 
     private fun calculateRecommendation(slots: List<Slot>) {
-        val uid = authRepository.currentUser?.uid ?: return
-        viewModelScope.launch {
-            bookingRepository.getUserBookingsFlow(uid).collect { result ->
-                val bookings = result.getOrNull() ?: emptyList()
-                val validBookings = bookings.filter { it.status == com.example.laketownturf.data.model.BookingStatus.CONFIRMED || it.status == com.example.laketownturf.data.model.BookingStatus.COMPLETED }
-                if (validBookings.isEmpty()) return@collect
-                
-                val availableSlots = slots.filter { !it.isBooked && !it.isPast() }
-                if (availableSlots.isEmpty()) return@collect
-                
-                // 1. Try to recommend based on favourite time
-                val timeFreq = validBookings.groupingBy { it.startTime }.eachCount()
-                val favTime = timeFreq.maxByOrNull { it.value }?.key
-                
-                if (favTime != null) {
-                    val matchingSlot = availableSlots.find { it.startTime == favTime }
-                    if (matchingSlot != null) {
-                        _uiState.update { it.copy(
-                            recommendedSlot = matchingSlot,
-                            recommendationReason = "You frequently play at ${com.example.laketownturf.utils.TimeUtils.formatTime12hr(favTime)}. This slot is available!"
-                        ) }
-                        return@collect
-                    }
-                }
-                
-                // 2. Otherwise recommend the lowest occupied slot today
-                val recommended = availableSlots.firstOrNull()
-                if (recommended != null) {
-                    _uiState.update { it.copy(
-                        recommendedSlot = recommended,
-                        recommendationReason = "Earliest available slot today."
-                    ) }
-                }
+        val validBookings = validBookingsCache
+        if (validBookings.isEmpty()) {
+            _uiState.update { it.copy(recommendedSlot = null, recommendationReason = null) }
+            return
+        }
+        
+        val availableSlots = slots.filter { !it.isBooked && !it.isPast() }
+        if (availableSlots.isEmpty()) {
+            _uiState.update { it.copy(recommendedSlot = null, recommendationReason = null) }
+            return
+        }
+        
+        // Find most frequent properties
+        val timeFreq = validBookings.groupingBy { it.startTime }.eachCount()
+        val favTime = timeFreq.maxByOrNull { it.value }?.key
+
+        val dayFreq = validBookings.groupingBy { java.time.LocalDate.parse(it.date).dayOfWeek.name }.eachCount()
+        val favDay = dayFreq.maxByOrNull { it.value }?.key
+        
+        val todayName = _uiState.value.selectedDate.dayOfWeek.name
+        val isFavDay = todayName == favDay
+        
+        // Determine preferred period (Morning: <12, Afternoon: 12-17, Evening: >=17)
+        val periodFreq = validBookings.groupingBy { 
+            val hour = it.startTime.substringBefore(":").toInt()
+            when {
+                hour < 12 -> "Morning"
+                hour < 17 -> "Afternoon"
+                else -> "Evening"
+            }
+        }.eachCount()
+        val favPeriod = periodFreq.maxByOrNull { it.value }?.key ?: "Evening"
+        
+        // Priority 1: Exact favorite time match
+        if (favTime != null) {
+            val matchingSlot = availableSlots.find { it.startTime == favTime }
+            if (matchingSlot != null) {
+                val reason = if (isFavDay) "Your favourite time on your favourite day! 🔥" else "You frequently play at ${com.example.laketownturf.utils.TimeUtils.formatTime12hr(favTime)}. This slot is available!"
+                _uiState.update { it.copy(recommendedSlot = matchingSlot, recommendationReason = reason) }
+                return
             }
         }
+        
+        // Priority 2: Preferred period match
+        val periodSlots = availableSlots.filter { 
+            val hour = it.startTime.substringBefore(":").toInt()
+            val period = when {
+                hour < 12 -> "Morning"
+                hour < 17 -> "Afternoon"
+                else -> "Evening"
+            }
+            period == favPeriod
+        }
+        
+        if (periodSlots.isNotEmpty()) {
+            val matchingSlot = periodSlots.first()
+            val reason = if (isFavDay) "It's your favourite day to play! Here's an open slot in the $favPeriod." else "You usually play in the $favPeriod. This slot is open!"
+            _uiState.update { it.copy(recommendedSlot = matchingSlot, recommendationReason = reason) }
+            return
+        }
+        
+        // Priority 3: Fallback (Earliest available)
+        val recommended = availableSlots.first()
+        _uiState.update { it.copy(recommendedSlot = recommended, recommendationReason = "Earliest available slot today.") }
     }
 
     fun bookSlot(slot: Slot, players: List<Player>, guests: List<Guest>, totalAmount: Double) {
