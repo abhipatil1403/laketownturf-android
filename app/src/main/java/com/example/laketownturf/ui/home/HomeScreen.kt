@@ -844,10 +844,15 @@ fun SavedPlayersModal(
         it.blockNo.contains(searchQuery, ignoreCase = true) ||
         it.flatNo.contains(searchQuery, ignoreCase = true)
     }
+    val cs = MaterialTheme.colorScheme
     
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = cs.surface,
+        contentColor = cs.onSurface
+    ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp).padding(bottom = 32.dp)) {
-            Text("Saved Players", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Saved Players", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = cs.primary)
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = searchQuery,
@@ -855,7 +860,13 @@ fun SavedPlayersModal(
                 placeholder = { Text("Search by name, block, or flat...") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = cs.primary,
+                    unfocusedBorderColor = cs.outline,
+                    focusedTextColor = cs.onSurface,
+                    unfocusedTextColor = cs.onSurface
+                ),
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = cs.primary) }
             )
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -874,11 +885,11 @@ fun SavedPlayersModal(
                             modifier = Modifier.fillMaxWidth().clickable { onPlayerSelected(player) }.padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Person, contentDescription = null, tint = cs.primary)
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(player.name, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                                Text("${player.blockNo} - ${player.flatNo}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(player.name, fontWeight = FontWeight.SemiBold, color = cs.primary)
+                                Text("${player.blockNo} - ${player.flatNo}", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                             }
                             IconButton(onClick = { onRemovePlayer(player) }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Remove", tint = DangerRed)
