@@ -407,15 +407,18 @@ fun BookingDetailsSheet(
                         Text("Player ${index + 1}", color = cs.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         
                         val isSaved = savedPlayers.any { it.name.equals(player.name, ignoreCase = true) && it.blockNo == player.blockNo && it.flatNo == player.flatNo }
-                        if (player.name.isNotBlank() && player.blockNo.isNotBlank() && player.flatNo.isNotBlank()) {
-                            IconButton(onClick = {
-                                if (isSaved) onRemoveSavedPlayer(player) else onSavePlayer(player)
-                            }) {
-                                Icon(
-                                    if (isSaved) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = if (isSaved) "Remove from saved" else "Save player",
-                                    tint = if (isSaved) cs.primary else cs.onSurfaceVariant
-                                )
+                        val isComplete = player.name.isNotBlank() && player.blockNo.isNotBlank() && player.flatNo.isNotBlank()
+                        Box(modifier = Modifier.androidx.compose.foundation.layout.size(48.dp), contentAlignment = Alignment.Center) {
+                            if (isComplete) {
+                                IconButton(onClick = {
+                                    if (isSaved) onRemoveSavedPlayer(player) else onSavePlayer(player)
+                                }) {
+                                    Icon(
+                                        if (isSaved) Icons.Default.Star else Icons.Default.StarBorder,
+                                        contentDescription = if (isSaved) "Remove from saved" else "Save player",
+                                        tint = if (isSaved) cs.primary else cs.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
 
