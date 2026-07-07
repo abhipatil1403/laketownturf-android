@@ -5,10 +5,10 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
@@ -50,8 +50,8 @@ enum class BottomNavItem(
     BOOKINGS(
         route = "main/bookings",
         label = "Bookings",
-        selectedIcon = Icons.Filled.CalendarMonth,
-        unselectedIcon = Icons.Outlined.CalendarMonth,
+        selectedIcon = Icons.Filled.Receipt,
+        unselectedIcon = Icons.Outlined.Receipt,
     ),
     PROFILE(
         route = "main/profile",
@@ -111,7 +111,7 @@ fun AppBottomBar(
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.label,
-                                modifier = Modifier.scale(iconScale),
+                                modifier = Modifier.scale(iconScale).androidx.compose.foundation.layout.size(32.dp),
                                 tint = tintColor,
                             )
                         }
