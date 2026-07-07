@@ -424,9 +424,21 @@ fun BookingDetailsSheet(
                         }
                     }
                     
+                    var debouncedQuery by remember { mutableStateOf(player.name) }
+                    
+                    LaunchedEffect(player.name) {
+                        kotlinx.coroutines.delay(300) // Debounce for 300ms
+                        debouncedQuery = player.name
+                    }
+
                     val allSuggestions = (savedPlayers + allActiveUsers).distinctBy { "${it.name.lowercase()}_${it.blockNo}_${it.flatNo}" }
                     val matchingPlayers = allSuggestions.filter { 
-                        it.name.contains(player.name, ignoreCase = true) && player.name.isNotBlank() && !it.name.equals(player.name, ignoreCase = true)
+                        val query = debouncedQuery.trim()
+                        (it.name.contains(query, ignoreCase = true) || 
+                         it.blockNo.contains(query, ignoreCase = true) || 
+                         it.flatNo.contains(query, ignoreCase = true)) && 
+                        query.isNotBlank() && 
+                        !it.name.equals(player.name, ignoreCase = true)
                     }
 
                     Box(modifier = Modifier.fillMaxWidth()) {

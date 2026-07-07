@@ -224,8 +224,6 @@ class BookingRepository {
      */
     suspend fun bookSlot(uid: String, slot: Slot, players: List<Player>, guests: List<Guest>, totalAmount: Double, razorpayOrderId: String, razorpayPaymentId: String, razorpaySignature: String): Result<Booking> {
         return try {
-            val bookingRef = bookingsCollection.document()
-            
             val uniqueBookingRef = bookingsCollection.document("booking_${slot.slotId}")
             val settingsRef = db.collection("settings").document("general")
 
@@ -250,21 +248,19 @@ class BookingRepository {
                                     throw Exception("This date is blocked for maintenance.")
                                 }
                             } catch (e: Exception) {
+                                // Date parsing error, assume maintenance is active
                                 throw Exception("Bookings are currently paused for maintenance.")
                             }
                         }
                     }
                 }
 
-                val snapshot = transaction.get(uniqueBookingRef)
-                
-                if (snapshot.exists()) {
-                    val status = snapshot.getString("status")
-                    if (status != com.example.laketownturf.data.model.BookingStatus.CANCELLED) {
-                        throw Exception("This slot was just booked by someone else.")
-                    }
+                // Double booking check
+                val bookingSnap = transaction.get(uniqueBookingRef)
+                if (bookingSnap.exists() && bookingSnap.getString("status") != com.example.laketownturf.data.model.BookingStatus.CANCELLED) {
+                    throw Exception("Slot already booked. Please choose another.")
                 }
-
+                
                 val booking = Booking(
                     bookingId = uniqueBookingRef.id,
                     uid = uid,
