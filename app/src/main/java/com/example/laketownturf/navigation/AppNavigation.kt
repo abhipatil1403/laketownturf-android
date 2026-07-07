@@ -99,7 +99,7 @@ fun AppNavigation() {
                     if (user != null) {
                         val currentRoute = navController.currentDestination?.route
                         if (user.status != UserStatus.ACTIVE) {
-                            if (currentRoute == Routes.HOME || currentRoute == Routes.BOOKINGS || currentRoute == Routes.PROFILE) {
+                            if (currentRoute?.startsWith(Routes.MAIN) == true) {
                                 navController.navigate(Routes.PENDING) {
                                     popUpTo(navController.graph.id) { inclusive = false }
                                 }

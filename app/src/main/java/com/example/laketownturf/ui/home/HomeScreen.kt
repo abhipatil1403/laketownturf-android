@@ -82,6 +82,12 @@ fun HomeScreen(
         }
     }
     
+    LaunchedEffect(uiState.isMaintenanceActive) {
+        if (uiState.isMaintenanceActive) {
+            selectedSlotToBook = null
+        }
+    }
+    
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
