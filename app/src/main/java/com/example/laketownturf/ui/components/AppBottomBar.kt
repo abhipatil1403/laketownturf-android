@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -111,7 +112,7 @@ fun AppBottomBar(
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.label,
-                                modifier = Modifier.scale(iconScale).androidx.compose.foundation.layout.size(32.dp),
+                                modifier = Modifier.scale(iconScale).size(32.dp),
                                 tint = tintColor,
                             )
                         }
