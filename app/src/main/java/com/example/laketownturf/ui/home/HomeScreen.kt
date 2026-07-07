@@ -447,7 +447,7 @@ fun BookingDetailsSheet(
                         !it.name.equals(player.name, ignoreCase = true)
                     }
 
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         LTTTextField(
                             value = player.name,
                             onValueChange = { newName ->
@@ -459,30 +459,42 @@ fun BookingDetailsSheet(
                             label = "Full Name",
                             modifier = Modifier.fillMaxWidth()
                         )
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = nameDropdownExpanded && matchingPlayers.isNotEmpty(),
-                            onDismissRequest = { nameDropdownExpanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = nameDropdownExpanded && matchingPlayers.isNotEmpty()
                         ) {
-                            matchingPlayers.take(4).forEach { suggestion ->
-                                androidx.compose.material3.DropdownMenuItem(
-                                    text = { 
-                                        Column {
-                                            Text(suggestion.name, fontWeight = FontWeight.Bold)
-                                            Text("Block ${suggestion.blockNo}, Flat ${suggestion.flatNo}", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = cs.surface)
+                            ) {
+                                Column {
+                                    matchingPlayers.take(4).forEach { suggestion ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    val updated = players.toMutableList()
+                                                    updated[index] = player.copy(
+                                                        name = suggestion.name,
+                                                        blockNo = suggestion.blockNo,
+                                                        flatNo = suggestion.flatNo
+                                                    )
+                                                    players = updated
+                                                    nameDropdownExpanded = false
+                                                }
+                                                .padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column {
+                                                Text(suggestion.name, fontWeight = FontWeight.Bold, color = cs.onSurface)
+                                                Text("Block ${suggestion.blockNo}, Flat ${suggestion.flatNo}", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                                            }
                                         }
-                                    },
-                                    onClick = {
-                                        val updated = players.toMutableList()
-                                        updated[index] = player.copy(
-                                            name = suggestion.name,
-                                            blockNo = suggestion.blockNo,
-                                            flatNo = suggestion.flatNo
-                                        )
-                                        players = updated
-                                        nameDropdownExpanded = false
+                                        if (suggestion != matchingPlayers.take(4).last()) {
+                                            HorizontalDivider(color = cs.outlineVariant.copy(alpha = 0.5f))
+                                        }
                                     }
-                                )
+                                }
                             }
                         }
                     }
