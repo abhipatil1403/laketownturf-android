@@ -408,7 +408,7 @@ fun BookingDetailsSheet(
                         
                         val isSaved = savedPlayers.any { it.name.equals(player.name, ignoreCase = true) && it.blockNo == player.blockNo && it.flatNo == player.flatNo }
                         val isComplete = player.name.isNotBlank() && player.blockNo.isNotBlank() && player.flatNo.isNotBlank()
-                        Box(modifier = Modifier.androidx.compose.foundation.layout.size(48.dp), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                             if (isComplete) {
                                 IconButton(onClick = {
                                     if (isSaved) onRemoveSavedPlayer(player) else onSavePlayer(player)
