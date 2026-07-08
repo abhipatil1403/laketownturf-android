@@ -142,9 +142,26 @@ fun HomeScreen(
     }
 
     if (uiState.paymentError != null) {
+        val failureLottieComposition by com.airbnb.lottie.compose.rememberLottieComposition(
+            com.airbnb.lottie.compose.LottieCompositionSpec.RawRes(com.example.laketownturf.R.raw.failure_animation)
+        )
+        val failureLottieProgress by com.airbnb.lottie.compose.animateLottieCompositionAsState(
+            composition = failureLottieComposition,
+            iterations = 1,
+            clipSpec = com.airbnb.lottie.compose.LottieClipSpec.Progress(0f, 0.90f)
+        )
+
         AlertDialog(
             onDismissRequest = { viewModel.clearPaymentError() },
-            icon = { Icon(Icons.Filled.Error, contentDescription = null, tint = DangerRed, modifier = Modifier.size(48.dp)) },
+            icon = { 
+                Box(modifier = Modifier.size(120.dp), contentAlignment = Alignment.Center) {
+                    com.airbnb.lottie.compose.LottieAnimation(
+                        composition = failureLottieComposition,
+                        progress = { failureLottieProgress },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            },
             title = { Text("Payment Failed") },
             text = { Text(uiState.paymentError ?: "An unknown error occurred during payment.") },
             confirmButton = {
