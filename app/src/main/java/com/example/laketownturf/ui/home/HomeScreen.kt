@@ -110,7 +110,8 @@ fun HomeScreen(
         )
         val lottieProgress by com.airbnb.lottie.compose.animateLottieCompositionAsState(
             composition = lottieComposition,
-            iterations = 1
+            iterations = 1,
+            clipSpec = com.airbnb.lottie.compose.LottieClipSpec.Progress(0f, 0.90f) // Stop at 90% to avoid blank end frame
         )
 
         AlertDialog(
