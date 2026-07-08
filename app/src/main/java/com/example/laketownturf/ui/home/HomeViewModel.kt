@@ -98,7 +98,18 @@ class HomeViewModel(
             val result = userRepository.getAllActiveUsers()
             val users = result.getOrNull() ?: emptyList()
             val players = users.map { user -> 
-                Player(name = user.name, blockNo = user.address.substringBefore(" -").takeIf { it.isNotBlank() } ?: user.address, flatNo = user.flatNo) 
+                val rawFlat = user.flatNo
+                val block = if (user.type == com.example.laketownturf.data.model.UserType.SOCIETY && rawFlat.contains("-")) {
+                    rawFlat.substringBefore("-").trim()
+                } else {
+                    ""
+                }
+                val flat = if (user.type == com.example.laketownturf.data.model.UserType.SOCIETY && rawFlat.contains("-")) {
+                    rawFlat.substringAfter("-").trim()
+                } else {
+                    rawFlat.trim()
+                }
+                Player(name = user.name, blockNo = block, flatNo = flat) 
             }
             _uiState.update { it.copy(allActiveUsers = players) }
         }
