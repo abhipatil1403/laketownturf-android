@@ -105,9 +105,25 @@ fun HomeScreen(
     // Remove booking success snackbar, we will use a dialog instead.
     
     if (uiState.bookingSuccess) {
+        val lottieComposition by com.airbnb.lottie.compose.rememberLottieComposition(
+            com.airbnb.lottie.compose.LottieCompositionSpec.RawRes(com.example.laketownturf.R.raw.success_animation)
+        )
+        val lottieProgress by com.airbnb.lottie.compose.animateLottieCompositionAsState(
+            composition = lottieComposition,
+            iterations = 1
+        )
+
         AlertDialog(
             onDismissRequest = { /* Force user to click OK */ },
-            icon = { Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = cs.primary, modifier = Modifier.size(48.dp)) },
+            icon = { 
+                Box(modifier = Modifier.size(120.dp), contentAlignment = Alignment.Center) {
+                    com.airbnb.lottie.compose.LottieAnimation(
+                        composition = lottieComposition,
+                        progress = { lottieProgress },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            },
             title = { Text("Booking Successful!") },
             text = { Text("Your payment was processed and your slot has been successfully booked. You can view it in your profile.") },
             confirmButton = {

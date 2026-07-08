@@ -67,6 +67,7 @@ dependencies {
   implementation(libs.androidx.compose.material.icons.extended)
   implementation(libs.coil.compose)
   implementation(libs.razorpay.checkout)
+  implementation(libs.lottie.compose)
 
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
