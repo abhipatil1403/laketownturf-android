@@ -111,7 +111,7 @@ fun HomeScreen(
         val lottieProgress by com.airbnb.lottie.compose.animateLottieCompositionAsState(
             composition = lottieComposition,
             iterations = 1,
-            clipSpec = com.airbnb.lottie.compose.LottieClipSpec.Progress(0f, 0.90f) // Stop at 90% to avoid blank end frame
+            clipSpec = com.airbnb.lottie.compose.LottieClipSpec.Progress(0f, 0.80f) // Stopped earlier to avoid blur
         )
 
         AlertDialog(
@@ -148,13 +148,13 @@ fun HomeScreen(
         val failureLottieProgress by com.airbnb.lottie.compose.animateLottieCompositionAsState(
             composition = failureLottieComposition,
             iterations = 1,
-            clipSpec = com.airbnb.lottie.compose.LottieClipSpec.Progress(0f, 0.90f)
+            clipSpec = com.airbnb.lottie.compose.LottieClipSpec.Progress(0f, 0.80f)
         )
 
         AlertDialog(
             onDismissRequest = { viewModel.clearPaymentError() },
             icon = { 
-                Box(modifier = Modifier.size(120.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.size(96.dp), contentAlignment = Alignment.Center) {
                     com.airbnb.lottie.compose.LottieAnimation(
                         composition = failureLottieComposition,
                         progress = { failureLottieProgress },
